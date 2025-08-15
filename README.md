@@ -59,6 +59,8 @@
 3. **Run the dev server**  
    ```bash
    pnpm run dev
+   # or
+   npm run dev
    ```
 
 5. **Access the app**  
