@@ -63,7 +63,7 @@ export default function getStartedPage() {
       return;
     }
 
-    router.push(`/tools/${toolId}`);
+    router.push(`/tools?id=${toolId}`);
   };
 
   return (

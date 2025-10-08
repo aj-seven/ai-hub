@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -34,12 +34,12 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toolConfigs } from "@/app/tools/_components/ToolConfig";
-import Tips from "../_components/Tips";
+import Tips from "./_components/Tips";
 
 export default function ToolPage() {
-  const params = useParams();
+  const params = useSearchParams();
   const router = useRouter();
-  const toolId = params?.tool as any;
+  const toolId = params.get("id") || "id";
 
   const [input, setInput] = useState("");
   const [selectedOption, setSelectedOption] = useState("");
@@ -96,15 +96,13 @@ export default function ToolPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-slate-900 mb-4">
-            Tool Not Found
-          </h1>
-          <p className="text-slate-600 mb-6">
+          <h1 className="text-2xl font-bold mb-4">Tool Not Found</h1>
+          <p className="text-slate-400 mb-6">
             The requested AI tool could not be found.
           </p>
-          <Button onClick={() => router.push("/")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
+          <Button onClick={() => router.push("/get-started")}>
+            <ArrowLeft className="h-4 w-4" />
+            Back
           </Button>
         </div>
       </div>
