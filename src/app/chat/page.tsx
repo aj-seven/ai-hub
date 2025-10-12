@@ -206,7 +206,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex max-w-6xl mx-auto flex-col min-h-screen bg-background">
+    <div className="flex max-w-7xl mx-auto flex-col min-h-screen bg-background">
       <ChatMessages
         messages={messages}
         apiStatus={apiStatus}

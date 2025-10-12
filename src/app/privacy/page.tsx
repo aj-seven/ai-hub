@@ -1,6 +1,6 @@
 export default function PrivacyTerms() {
   return (
-    <div className="max-w-6xl mx-auto px-3 text-gray-800 dark:text-gray-200">
+    <div className="max-w-7xl mx-auto px-3 text-gray-800 dark:text-gray-200">
       <h1 className="text-4xl font-bold mb-4">
         Privacy Policy & Terms of Service
       </h1>

@@ -227,7 +227,7 @@ export default function ToolPage() {
     <div className="min-h-screen">
       {/* Header */}
       <header className="border-b backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-3">
+        <div className="max-w-7xl mx-auto px-3">
           <div className="flex items-center min-h-[72px]">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white">
@@ -255,7 +255,7 @@ export default function ToolPage() {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-3 py-2">
+      <div className="max-w-7xl mx-auto px-3 py-2">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Input Section */}
           <Card className="border-1 p-2">
