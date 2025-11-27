@@ -8,6 +8,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { useEffect, useRef, useState } from "react";
 import { Clipboard, Check } from "lucide-react";
+import Image from "next/image";
 
 export function ChatMessages({
   messages,
@@ -53,7 +54,13 @@ export function ChatMessages({
               >
                 {!isUser && (
                   <div className="w-10 h-10 rounded-full bg-muted text-xs font-bold flex items-center justify-center border shrink-0">
-                    AH
+                    <Image
+                      src="/assets/logo-nobg.png"
+                      alt="AH"
+                      width={50}
+                      height={50}
+                      className="rounded-full"
+                    />
                   </div>
                 )}
                 <div
