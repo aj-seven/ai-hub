@@ -23,6 +23,8 @@ import {
 import { ModelDetailsItem } from "./ModelDetailsItem";
 import { isMobile } from "@/lib/utils";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/api-client";
+import { OllamaModel } from "@/types/ollama-model";
 
 export function ChatInput({
   input,
@@ -52,16 +54,19 @@ export function ChatInput({
   useEffect(() => {
     const fetchModels = async () => {
       try {
-        const res = await fetch("/api/ollama-models", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ host: localStorage.getItem("ollama_host") }),
-        });
-        const data = await res.json();
-        setModelData(data);
+        const res = await apiClient.fetchModels();
 
-        if (data.models) {
-          const names = data.models.map((m: any) => m.name);
+        if (res.error) {
+          console.error("Failed to fetch models:", res.error);
+          return;
+        }
+
+        const models = res?.models || [];
+        setModelData(models);
+
+        if (models.length > 0) {
+          const names = models.map((m: any) => m.name);
+
           const storedModel = localStorage.getItem("selectedModel");
           const selectedModel = storedModel || names[0];
           setSelectedModel(selectedModel);
@@ -71,6 +76,7 @@ export function ChatInput({
         console.error("Failed to fetch models", err);
       }
     };
+
     fetchModels();
   }, [setModel]);
 
@@ -112,7 +118,9 @@ export function ChatInput({
         placeholder="Type your message..."
         disabled={loading || disabled || apiStatus === "offline"}
         rows={1}
-        className="w-full resize-none overflow-auto max-h-[200px] rounded-md border border-input bg-background px-4 py-3 text-sm"
+        className={`w-full resize-none overflow-auto max-h-[200px] rounded-md border border-input bg-background px-4 py-3 text-sm ${
+          apiStatus === "offline" ? "cursor-not-allowed" : ""
+        }`}
       />
 
       {/* Control Panel */}
@@ -165,7 +173,7 @@ export function ChatInput({
                 {/* model details */}
                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                   <h3 className="font-semibold text-sm">Available Models</h3>
-                  {modelData?.models?.map((model: any, index: number) => (
+                  {modelData?.map((model: OllamaModel, index: number) => (
                     <ModelDetailsItem key={index} model={model} />
                   ))}
                 </div>
@@ -188,7 +196,7 @@ export function ChatInput({
                       <SelectValue placeholder="Select model" />
                     </SelectTrigger>
                     <SelectContent>
-                      {modelData?.models?.map((model: any) => (
+                      {modelData?.map((model: OllamaModel) => (
                         <SelectItem key={model.name} value={model.name}>
                           {model.name}
                         </SelectItem>
