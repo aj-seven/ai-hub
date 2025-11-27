@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pencil, Save, Trash2, Plus } from "lucide-react";
 import clsx from "clsx";
-import { Chat, ChatSidebarProps } from "@/types/chat";
+import { ChatSidebarProps } from "@/types/chat";
 
 export function ChatSidebar({
   chats,
@@ -40,7 +40,7 @@ export function ChatSidebar({
           <div
             key={chat.id}
             className={clsx(
-              "flex items-center justify-between p-2 rounded transition-colors duration-200 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md",
+              "flex items-center justify-between p-2 transition-colors duration-200 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md",
               currentChatId === chat.id && "border font-semibold rounded-md"
             )}
             onClick={() => handleChatSelect(chat.id)}
