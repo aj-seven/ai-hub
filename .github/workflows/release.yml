@@ -12,23 +12,28 @@ on:
 jobs:
   create-release:
     runs-on: ubuntu-latest
+
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Set output
-        id: vars
+      - name: Extract tag version
+        id: version
         run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
-      - name: Setup node
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
       - name: Generate changelog
-        id: create_release
-        run: npx changelogithub --draft --name AI-Hub_Desktop-${{ steps.vars.outputs.tag }}
+        id: changelog
+        run: npx changelogithub --name AI-Hub_Desktop-${{ steps.version.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.APP_RELEASE_TOKEN }}
 
@@ -45,13 +50,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Node.js (npm only)
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: "npm"
 
-      - name: Install dependencies (Ubuntu only)
+      # Ubuntu-specific dependencies
+      - name: Install Ubuntu dependencies
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
           sudo apt-get update
@@ -63,7 +69,8 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev
 
-      - name: Install dependencies (mac only)
+      # macOS-specific setup
+      - name: Install macOS dependencies
         if: matrix.platform == 'macos-latest'
         run: rustup target add aarch64-apple-darwin
 
@@ -75,10 +82,10 @@ jobs:
         with:
           workspaces: "./src-tauri -> target"
 
-      - name: Install app dependencies and build web
+      - name: Install NPM dependencies & build frontend
         run: npm install
 
-      - name: Build the app
+      - name: Build Tauri application
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.APP_RELEASE_TOKEN }}
@@ -88,5 +95,5 @@ jobs:
           tagName: ${{ needs.create-release.outputs.tag }}
           releaseName: "🚀 AI-Hub Desktop ${{ needs.create-release.outputs.tag }}"
           releaseBody: ""
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
