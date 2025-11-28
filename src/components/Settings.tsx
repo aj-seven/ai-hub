@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import APIKeys from "./ApiKey";
-import { Bot, Key } from "lucide-react";
+import { Bot, Key, Sun } from "lucide-react";
 import OllamaSettings from "./OllamaSettings";
+import AppearanceSettings from "./AppearanceSettings"; // ← NEW
 
 export default function Settings() {
   const [selectedTab, setSelectedTab] = useState("api-keys");
@@ -23,9 +24,16 @@ export default function Settings() {
             <Key className="h-4 w-4" />
             API Keys
           </TabsTrigger>
+
           <TabsTrigger value="set-ollama" className="cursor-pointer">
             <Bot className="h-4 w-4" />
             Ollama
+          </TabsTrigger>
+
+          {/* NEW APPEARANCE TAB */}
+          <TabsTrigger value="appearance" className="cursor-pointer">
+            <Sun className="h-4 w-4" />
+            Appearance
           </TabsTrigger>
         </TabsList>
 
@@ -36,6 +44,11 @@ export default function Settings() {
 
         <TabsContent value="set-ollama">
           <OllamaSettings />
+        </TabsContent>
+
+        {/* NEW APPEARANCE TAB CONTENT */}
+        <TabsContent value="appearance">
+          <AppearanceSettings />
         </TabsContent>
       </Tabs>
     </div>
