@@ -26,6 +26,7 @@
 - Removes CORS issues.
 - Just Add ollama serving IP in settings and start using ollama models via chat interface.
 - More Features yet to come.
+- Download from [here](https://github.com/aj-seven/ai-hub/releases)
 
 ## Demo Screenshots
 
