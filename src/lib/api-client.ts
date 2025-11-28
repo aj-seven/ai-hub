@@ -3,63 +3,117 @@ import {
   GenerateResponse,
   Provider,
 } from "@/types/api-client";
+import { invoke, isTauri } from "@tauri-apps/api/core";
+
+export type OllamaModel = {
+  name: string;
+  description?: string;
+  [key: string]: any;
+};
 
 class APIClient {
+  // Generate AI content
   async generate(request: GenerateRequest): Promise<GenerateResponse> {
-    try {
-      if (
-        !request.prompt ||
-        !request.tool ||
-        !request.apiKey ||
-        typeof request.apiKey !== "string"
-      ) {
-        return {
-          success: false,
-          error: "Invalid request: Missing prompt, tool, or API key",
-        };
-      }
-
-      const body: GenerateRequest = {
-        prompt: request.prompt,
-        tool: request.tool,
-        provider: request.provider,
-        apiKey: request.apiKey,
-        options: {
-          ...request.options,
-          maxTokens: request.options?.maxTokens ?? 1000,
-          temperature: request.options?.temperature ?? 0.7,
-        },
-      };
-
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        return {
-          success: false,
-          error: errorData.error || "API request failed",
-          details: errorData.details,
-        };
-      }
-
-      const data: GenerateResponse = await response.json();
-      return data;
-    } catch (error) {
-      console.error("API Client Error:", error);
+    if (!request.prompt || !request.tool || !request.apiKey) {
       return {
         success: false,
-        error: "Failed to connect to AI service",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: "Missing prompt, tool, or API key",
       };
+    }
+
+    const body: GenerateRequest = {
+      ...request,
+      options: {
+        ...request.options,
+        maxTokens: request.options?.maxTokens ?? 1000,
+        temperature: request.options?.temperature ?? 0.7,
+      },
+    };
+
+    const host = localStorage.getItem("ollama_host");
+    if (!host) {
+      return {
+        success: false,
+        error: "Ollama host not set in localStorage",
+      };
+    }
+
+    const url = `${host}/api/generate`;
+
+    if (isTauri()) {
+      try {
+        const response = await invoke<GenerateResponse>("call_api", {
+          method: "POST",
+          url,
+          headers: JSON.stringify({ "Content-Type": "application/json" }),
+          body: JSON.stringify(body),
+        });
+        return response;
+      } catch (error) {
+        console.error("Tauri call_api error:", error);
+        return {
+          success: false,
+          error: "Failed to call generate API via Tauri",
+          details: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
+    } else {
+      try {
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!resp.ok) {
+          const errData = await resp.json();
+          return {
+            success: false,
+            error: errData.error || "API request failed",
+            details: errData.details,
+          };
+        }
+
+        const data: GenerateResponse = await resp.json();
+        return data;
+      } catch (err) {
+        return {
+          success: false,
+          error: "Failed to call generate API in web environment",
+          details: err instanceof Error ? err.message : "Unknown error",
+        };
+      }
     }
   }
 
+  // Fetch Ollama models
+  async fetchModels() {
+    const host = localStorage.getItem("ollama_host");
+    if (!host) return { error: "Ollama host not set in localStorage" };
+
+    try {
+      if (isTauri()) {
+        const res = await invoke<{ models: OllamaModel[] }>("call_api", {
+          method: "GET",
+          url: `${host}/api/tags`,
+        });
+        console.log(res);
+
+        return { models: res.models };
+      } else {
+        const response = await fetch(`${host}/api/tags`);
+        if (!response.ok) return { error: "Failed to fetch models" };
+        const data = await response.json();
+        console.log(data);
+
+        return { models: data.models };
+      }
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : "Unknown error" };
+    }
+  }
+
+  // Check backend /api and Ollama host status
   async getStatus(): Promise<{
     success: boolean;
     status?: string;
@@ -75,43 +129,64 @@ class APIClient {
       { label: "Cohere", value: "cohere" },
     ];
 
-    // Get all available providers
     const providers = Object.keys(localStorage)
       .filter((key) => key.startsWith("api_key_"))
       .map((key) => key.replace("api_key_", ""))
-      .filter((provider) => aiProviders.map((p) => p.value).includes(provider));
+      .filter((p) => aiProviders.map((a) => a.value).includes(p));
 
+    const errorMessages: string[] = [];
     let status: string | undefined = undefined;
     let ollamaStatus: boolean | undefined = undefined;
-    let errorMessages: string[] = [];
 
-    try {
-      const response = await fetch("/api/generate");
-      if (response.ok) {
-        const data = await response.json();
-        status = data.status;
-      } else {
-        errorMessages.push("Failed to get /api/generate status");
-      }
-    } catch (err) {
-      errorMessages.push("Fetch to /api/generate failed");
-    }
+    const host = localStorage.getItem("ollama_host");
 
-    try {
-      const host = localStorage.getItem("ollama_host");
-      if (host) {
-        const ollamaResponse = await fetch(host, {
+    if (isTauri()) {
+      try {
+        const res = await invoke<{ status: string }>("call_api", {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          url: `${host}/api/version`,
         });
-        ollamaStatus = ollamaResponse.ok;
-      } else {
-        errorMessages.push("Ollama host not found");
+        status = (res as any).status;
+      } catch (err) {
+        errorMessages.push("Failed to get /api/status via Tauri");
       }
-    } catch (err) {
-      errorMessages.push("Fetch to Ollama host failed");
+
+      if (host) {
+        try {
+          const res = await invoke<string>("call_api", {
+            method: "GET",
+            url: host,
+          });
+          ollamaStatus = !!res;
+        } catch (err) {
+          errorMessages.push("Failed to fetch Ollama host via Tauri");
+        }
+      } else {
+        errorMessages.push("Ollama host not set in localStorage");
+      }
+    } else {
+      try {
+        const resp = await fetch("/api/status");
+        if (resp.ok) {
+          const data = await resp.json();
+          status = data.status;
+        } else {
+          errorMessages.push("Failed to fetch /api/status in web");
+        }
+      } catch {
+        errorMessages.push("Failed to fetch /api/status in web");
+      }
+
+      if (host) {
+        try {
+          const resp = await fetch(host);
+          ollamaStatus = resp.ok;
+        } catch {
+          errorMessages.push("Failed to fetch Ollama host in web");
+        }
+      } else {
+        errorMessages.push("Ollama host not set in localStorage");
+      }
     }
 
     return {

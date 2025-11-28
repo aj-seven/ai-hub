@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,6 +11,7 @@ import {
   Info,
   Settings2Icon,
   BotMessageSquare,
+  PenTool,
 } from "lucide-react";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import {
@@ -24,6 +25,7 @@ import Settings from "./Settings";
 import Image from "next/image";
 import { CustomDialog } from "./ui/custom-dialog";
 import ApiStatus from "./ApiStatus";
+import { isTauri } from "@tauri-apps/api/core";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -31,6 +33,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Chat", href: "/chat", icon: BotMessageSquare },
+    { name: "Tools", href: "/get-started", icon: PenTool },
     { name: "Prompts", href: "/prompts", icon: ScrollText },
     { name: "About", href: "/about", icon: Info },
   ];
@@ -40,17 +43,23 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-3">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-1">
-            <div className="rounded-lg">
-              <Image
-                src="/assets/logo-nobg.png"
-                alt="AI Hub Logo"
-                width={42}
-                height={42}
-              />
-            </div>
-            <span className="text-xl font-bold ">AI Hub</span>
-          </Link>
+          {isTauri() ? (
+            <></>
+          ) : (
+            <>
+              <Link href="/" className="flex items-center gap-1">
+                <div className="rounded-lg">
+                  <Image
+                    src="/assets/logo-nobg.png"
+                    alt="AI Hub Logo"
+                    width={42}
+                    height={42}
+                  />
+                </div>
+                <span className="text-xl font-bold ">AI Hub</span>
+              </Link>
+            </>
+          )}
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
@@ -58,10 +67,8 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`flex items-center gap-1 font-medium transition hover:bg-gray-800 rounded-md p-1 ${
-                  pathname === link.href
-                    ? "text-blue-600"
-                    : "text-gray-700 dark:text-gray-300"
+                className={`flex items-center gap-1 font-medium hover:bg-gray-200 dark:hover:bg-gray-800 rounded-md p-1 transition-all ${
+                  pathname === link.href ? "text-blue-600" : ""
                 }`}
               >
                 <link.icon className="h-4 w-4" />

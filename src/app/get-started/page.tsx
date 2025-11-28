@@ -63,13 +63,13 @@ export default function getStartedPage() {
       return;
     }
 
-    router.push(`/tools/${toolId}`);
+    router.push(`/tools?id=${toolId}`);
   };
 
   return (
     <>
       <section className="px-3 mb-4">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="mb-4">
             <h3 className="text-3xl font-bold">Choose Your AI Tool</h3>
             <p className="text-lg">
@@ -98,7 +98,7 @@ export default function getStartedPage() {
           </div>
 
           {/* Tools Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
             {filteredTools.map((tool) => (
               <Card
                 key={tool.id}

@@ -6,6 +6,7 @@ import { ChatMessages } from "./_components/ChatMessages";
 import { ChatInput } from "./_components/ChatInput";
 import { Chat, Message } from "@/types/chat";
 import { apiClient } from "@/lib/api-client";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 
 export default function ChatPage() {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -131,24 +132,63 @@ export default function ChatPage() {
     setInput("");
     setLoading(true);
 
+    const host = localStorage.getItem("ollama_host");
+    if (!host) throw new Error("Ollama host not set");
+
+    const url = `${host}/api/chat`;
+
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      let reader: ReadableStreamDefaultReader<Uint8Array>;
+
+      // TAURI VERSION
+      if (isTauri()) {
+        // Body identical to web version
+        const payload = {
           model,
           messages: finalMessages,
           stream: true,
-          host: localStorage.getItem("ollama_host"),
-        }),
-        signal: ctrl.signal,
-      });
+          host,
+        };
 
-      if (!res.ok || !res.body) {
-        throw new Error(`Request failed with status ${res.status}`);
+        // call chat_api with SAME BODY shape as web
+        const rawText: string = await invoke("chat_api", {
+          url,
+          body: JSON.stringify(payload),
+        });
+
+        // make fake read stream
+        const uint8 = new TextEncoder().encode(rawText);
+
+        const fakeStream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(uint8);
+            controller.close();
+          },
+        });
+
+        reader = fakeStream.getReader();
+      } else {
+        // WEB VERSION
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model,
+            messages: finalMessages,
+            stream: true,
+            host: localStorage.getItem("ollama_host"),
+          }),
+          signal: ctrl.signal,
+        });
+
+        if (!res.ok || !res.body) {
+          throw new Error(`Request failed with status ${res.status}`);
+        }
+
+        reader = res.body.getReader();
       }
 
-      const reader = res.body.getReader();
+      // SHARED JSONL STREAM PARSER
       const decoder = new TextDecoder("utf-8");
       let buffer = "";
 
@@ -159,8 +199,6 @@ export default function ChatPage() {
         buffer += decoder.decode(value, { stream: true });
 
         const lines = buffer.split("\n");
-
-        // Keep the last partial line in buffer
         buffer = lines.pop() || "";
 
         for (const line of lines) {
@@ -173,9 +211,7 @@ export default function ChatPage() {
               assistantMsg.content += json.message.content;
               updateChatMessages([...messages, userMsg, assistantMsg]);
             }
-          } catch (err) {
-            console.warn("Failed to parse JSON line:", trimmed, err);
-          }
+          } catch {}
         }
       }
 
@@ -187,9 +223,7 @@ export default function ChatPage() {
             assistantMsg.content += json.message.content;
             updateChatMessages([...messages, userMsg, assistantMsg]);
           }
-        } catch (err) {
-          console.warn("Failed to parse final buffer chunk:", buffer, err);
-        }
+        } catch {}
       }
     } catch (err) {
       console.error(err);
@@ -206,7 +240,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex max-w-6xl mx-auto flex-col min-h-screen bg-background">
+    <div className="flex max-w-7xl mx-auto flex-col min-h-screen bg-background">
       <ChatMessages
         messages={messages}
         apiStatus={apiStatus}

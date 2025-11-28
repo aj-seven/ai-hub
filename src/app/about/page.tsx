@@ -1,8 +1,8 @@
 export default function About() {
   return (
     <>
-      <main className="bg-background px-3 sm:px-10 md:px-20 py-2">
-        <div className="max-w-6xl mx-auto">
+      <main className="bg-background px-3 py-2">
+        <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-bold mb-6">About AI Hub</h1>
 
           <p className="text-lg leading-relaxed mb-6 text-muted-foreground">
