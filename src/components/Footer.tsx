@@ -31,7 +31,7 @@ export default function Footer() {
         </p>
 
         {/* Footer Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8 ">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
           <div>
             <h3 className="font-extrabold mb-2">AI Tools</h3>
             <p>Email Writer</p>
@@ -79,6 +79,17 @@ export default function Footer() {
               className="text-blue-600 hover:underline"
             >
               Contact Support
+            </Link>
+          </div>
+
+          <div>
+            <h3 className="font-extrabold mb-2">Download</h3>
+            <Link
+              href="https://github.com/aj-seven/ai-hub/releases/latest"
+              target="_blank"
+              className="text-blue-600 hover:underline"
+            >
+              Desktop App (GitHub)
             </Link>
           </div>
         </div>
