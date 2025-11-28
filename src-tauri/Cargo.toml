@@ -1,6 +1,6 @@
 [package]
 name = "ai-hub"
-version = "0.5.0"
+version = "0.5.1"
 description = "AI Hub lets you chat with powerful AI models like Ollama for real-time assistance, content generation, and productivity tools—all in one place"
 authors = ["aj-seven"]
 edition = "2021"
