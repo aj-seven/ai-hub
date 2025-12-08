@@ -75,7 +75,7 @@ export default function Footer() {
             </Link>
             <br />
             <Link
-              href="mailto:support@example.com"
+              href="mailto:ajseven@outlook.in"
               className="text-blue-600 hover:underline"
             >
               Contact Support
@@ -83,7 +83,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-extrabold mb-2">Download</h3>
+            <h3 className="font-extrabold mb-2">Downloads</h3>
             <Link
               href="https://github.com/aj-seven/ai-hub/releases/latest"
               target="_blank"
