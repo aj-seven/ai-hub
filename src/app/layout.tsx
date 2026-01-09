@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/next";
 
 type RootLayoutProps = {
   children: ReactNode;
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <Navbar />
           {children}
           <Toaster />
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>
