@@ -66,6 +66,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
         />
         <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+        {/* google site verification*/}
+        <meta name="google-site-verification" content="028qjEyCwX-DFd1i4ERqtBsXSHh3FLgAQbdTQx-h4LU" />
       </head>
 
       <body>
