@@ -6,7 +6,7 @@ import { ChatMessages } from "./_components/ChatMessages";
 import { ChatInput } from "./_components/ChatInput";
 import { Chat, Message } from "@/types/chat";
 import { apiClient } from "@/lib/api-client";
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { isTauri } from "@tauri-apps/api/core";
 
 export default function ChatPage() {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -150,23 +150,15 @@ export default function ChatPage() {
           host,
         };
 
-        // call chat_api with SAME BODY shape as web
-        const rawText: string = await invoke("chat_api", {
+        // Use the new streaming API
+        const stream = apiClient.streamApi(
+          "POST",
           url,
-          body: JSON.stringify(payload),
-        });
+          { "Content-Type": "application/json" },
+          JSON.stringify(payload)
+        );
 
-        // make fake read stream
-        const uint8 = new TextEncoder().encode(rawText);
-
-        const fakeStream = new ReadableStream({
-          start(controller) {
-            controller.enqueue(uint8);
-            controller.close();
-          },
-        });
-
-        reader = fakeStream.getReader();
+        reader = stream.getReader();
       } else {
         // WEB VERSION
         const res = await fetch(url, {
@@ -192,6 +184,7 @@ export default function ChatPage() {
       const decoder = new TextDecoder("utf-8");
       let buffer = "";
 
+      let lastUpdate = Date.now();
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -201,6 +194,7 @@ export default function ChatPage() {
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";
 
+        let contentUpdated = false;
         for (const line of lines) {
           const trimmed = line.trim();
           if (!trimmed) continue;
@@ -209,9 +203,16 @@ export default function ChatPage() {
             const json = JSON.parse(trimmed);
             if (json.message?.content) {
               assistantMsg.content += json.message.content;
-              updateChatMessages([...messages, userMsg, assistantMsg]);
+              contentUpdated = true;
             }
           } catch {}
+        }
+
+        const now = Date.now();
+        if (contentUpdated && now - lastUpdate > 32) {
+          // Update state at most every 32ms (~30fps)
+          setMessages([...messages, userMsg, assistantMsg]);
+          lastUpdate = now;
         }
       }
 
@@ -221,10 +222,12 @@ export default function ChatPage() {
           const json = JSON.parse(buffer.trim());
           if (json.message?.content) {
             assistantMsg.content += json.message.content;
-            updateChatMessages([...messages, userMsg, assistantMsg]);
           }
         } catch {}
       }
+
+      // Update both messages and history (saves to localStorage)
+      updateChatMessages([...messages, userMsg, assistantMsg]);
     } catch (err) {
       console.error(err);
       assistantMsg.content += "\n⚠️ Error or aborted.";

@@ -198,6 +198,71 @@ class APIClient {
       error: errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
     };
   }
+
+  // Stream API for real-time responses (Tauri only)
+  streamApi(
+    method: string,
+    url: string,
+    headers?: Record<string, string>,
+    body?: string
+  ): ReadableStream<Uint8Array> {
+    const streamId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    return new ReadableStream({
+      async start(controller) {
+        const { listen } = await import("@tauri-apps/api/event");
+
+        // Listen for chunks
+        const unlistenChunk = await listen<{ chunk: string }>(
+          `stream-chunk-${streamId}`,
+          (event) => {
+            const chunk = event.payload.chunk;
+            controller.enqueue(new TextEncoder().encode(chunk));
+          }
+        );
+
+        // Listen for errors
+        const unlistenError = await listen<{ error: string }>(
+          `stream-error-${streamId}`,
+          (event) => {
+            console.error("Stream error:", event.payload.error);
+            controller.error(new Error(event.payload.error));
+            unlistenChunk();
+            unlistenError();
+            unlistenComplete();
+          }
+        );
+
+        // Listen for completion
+        const unlistenComplete = await listen<{ done: boolean }>(
+          `stream-complete-${streamId}`,
+          () => {
+            controller.close();
+            unlistenChunk();
+            unlistenError();
+            unlistenComplete();
+          }
+        );
+
+        // Start the stream
+        try {
+          await invoke("stream_api", {
+            streamId,
+            method,
+            url,
+            headers: headers ? JSON.stringify(headers) : undefined,
+            body,
+          });
+        } catch (error) {
+          console.error("Failed to start stream:", error);
+          controller.error(error);
+          unlistenChunk();
+          unlistenError();
+          unlistenComplete();
+        }
+      },
+    });
+  }
 }
 
 export const apiClient = new APIClient();
