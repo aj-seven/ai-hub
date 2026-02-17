@@ -4,146 +4,176 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import { toast } from "sonner";
-import { Trash2, Pencil, Key } from "lucide-react";
+import { openExternal } from "@/lib/utils";
+import {
+  Eye,
+  EyeOff,
+  Save,
+  Trash2,
+  Bot,
+  Sparkles,
+  Zap,
+  Brain,
+  ExternalLink,
+} from "lucide-react";
 
-const providers = ["openai", "google", "cohere", "anthropic"];
+const providers = [
+  {
+    id: "openai",
+    name: "OpenAI",
+    icon: Bot,
+    url: "https://platform.openai.com/api-keys",
+    description: "GPT-4, GPT-3.5 Turbo, DALL-E",
+  },
+  {
+    id: "anthropic",
+    name: "Anthropic",
+    icon: Brain,
+    url: "https://console.anthropic.com/settings/keys",
+    description: "Claude 3.5 Sonnet, Haiku, Opus",
+  },
+  {
+    id: "google",
+    name: "Google Gemini",
+    icon: Sparkles,
+    url: "https://aistudio.google.com/app/apikey",
+    description: "Gemini 1.5 Pro, Flash",
+  },
+  {
+    id: "cohere",
+    name: "Cohere",
+    icon: Zap,
+    url: "https://dashboard.cohere.com/api-keys",
+    description: "Command R, R+",
+  },
+];
 
 export default function APIKeys() {
-  const [provider, setProvider] = useState("openai");
-  const [apiKey, setApiKey] = useState("");
-  const [storedKeys, setStoredKeys] = useState<Record<string, string>>({});
+  const [keys, setKeys] = useState<Record<string, string>>({});
+  const [visible, setVisible] = useState<Record<string, boolean>>({});
 
-  // Load all stored API keys from localStorage
-  const loadStoredKeys = () => {
-    const keys: Record<string, string> = {};
-    providers.forEach((p) => {
-      const key = localStorage.getItem(`api_key_${p}`);
-      if (key) keys[p] = key;
-    });
-    setStoredKeys(keys);
-  };
-
-  // Load all on mount
+  // Load keys on mount
   useEffect(() => {
-    loadStoredKeys();
+    const loadedKeys: Record<string, string> = {};
+    providers.forEach((p) => {
+      const stored = localStorage.getItem(`api_key_${p.id}`);
+      if (stored) loadedKeys[p.id] = stored;
+    });
+    setKeys(loadedKeys);
   }, []);
 
-  const handleSave = () => {
-    if (!apiKey.trim()) {
+  const handleSave = (providerId: string, newValue: string) => {
+    if (!newValue.trim()) {
       toast.error("API key cannot be empty");
       return;
     }
-    localStorage.setItem(`api_key_${provider}`, apiKey.trim());
-    toast.success(`API Key for ${provider} saved`);
-    setApiKey("");
-    loadStoredKeys();
+    localStorage.setItem(`api_key_${providerId}`, newValue.trim());
+    setKeys((prev) => ({ ...prev, [providerId]: newValue.trim() }));
+    toast.success(`${providerId} API Key saved`);
   };
 
-  const handleEdit = (prov: string) => {
-    setProvider(prov);
-    setApiKey(storedKeys[prov]);
+  const handleDelete = (providerId: string) => {
+    localStorage.removeItem(`api_key_${providerId}`);
+    setKeys((prev) => {
+      const newKeys = { ...prev };
+      delete newKeys[providerId];
+      return newKeys;
+    });
+    toast.success(`${providerId} API Key removed`);
   };
 
-  const handleDelete = (prov: string) => {
-    localStorage.removeItem(`api_key_${prov}`);
-    toast.success(`API Key for ${prov} deleted`);
-    if (provider === prov) setApiKey("");
-    loadStoredKeys();
+  const toggleVisibility = (providerId: string) => {
+    setVisible((prev) => ({ ...prev, [providerId]: !prev[providerId] }));
   };
 
   return (
-    <>
-      {/* List of stored API keys */}
-      <div className="mb-4 space-y-2">
-        <Label className="text-sm">Saved API Keys</Label>
-        {Object.entries(storedKeys).length === 0 ? (
-          <p className="text-sm text-muted-foreground">No API keys stored</p>
-        ) : (
-          <ul className="space-y-1">
-            {Object.entries(storedKeys).map(([prov, key]) => (
-              <li
-                key={prov}
-                className="flex items-center justify-between bg-muted/90 py-2 rounded-md p-1 text-sm"
-              >
-                <div className="flex flex-col">
-                  <span className="font-medium">{prov}</span>
-                  <span className="text-xs text-muted-foreground truncate max-w-[180px]">
-                    {key}
-                  </span>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4">
+        {providers.map((provider) => {
+          const Icon = provider.icon;
+          const isStored = !!keys[provider.id];
+          const isVisible = !!visible[provider.id];
+          const currentKey = keys[provider.id] || "";
+
+          return (
+            <div
+              key={provider.id}
+              className="flex flex-col gap-4 p-4 border rounded-xl bg-card shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{provider.name}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {provider.description}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex gap-2">
+                <button
+                  onClick={() => openExternal(provider.url)}
+                  className="text-xs flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Get Key <ExternalLink className="w-3 h-3" />
+                </button>
+              </div>
+
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    type={isVisible ? "text" : "password"}
+                    placeholder={`sk-...`}
+                    className="pr-10 font-mono text-sm"
+                    value={currentKey}
+                    onChange={(e) =>
+                      setKeys((prev) => ({
+                        ...prev,
+                        [provider.id]: e.target.value,
+                      }))
+                    }
+                  />
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => handleEdit(prov)}
-                    title="Edit"
+                    className="absolute right-0 top-0 h-full w-10 text-muted-foreground hover:text-foreground"
+                    onClick={() => toggleVisibility(provider.id)}
                   >
-                    <Pencil className="h-4 w-4" />
+                    {isVisible ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </Button>
+                </div>
+
+                <Button
+                  size="icon"
+                  variant={isStored ? "outline" : "default"}
+                  onClick={() => handleSave(provider.id, currentKey)}
+                  title="Save Key"
+                >
+                  <Save className="w-4 h-4" />
+                </Button>
+
+                {isStored && (
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => handleDelete(prov)}
-                    title="Delete"
+                    className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                    onClick={() => handleDelete(provider.id)}
+                    title="Delete Key"
                   >
-                    <Trash2 className="h-4 w-4 text-red-500" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
-
-      {/* Input form */}
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label>Select Provider</Label>
-          <Select value={provider} onValueChange={setProvider}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select provider" />
-            </SelectTrigger>
-            <SelectContent>
-              {providers.map((p) => (
-                <SelectItem key={p} value={p}>
-                  {p}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="apiKey">API Key</Label>
-          <Input
-            id="apiKey"
-            type="text"
-            placeholder={`Enter API key for ${provider}`}
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-          />
-        </div>
-
-        <div className="flex justify-start">
-          <Button
-            disabled={!apiKey}
-            variant="outline"
-            className=" cursor-pointer"
-            onClick={handleSave}
-          >
-            <Key className="h-4 w-4" />
-            Save API Key
-          </Button>
-        </div>
-      </div>
-    </>
+    </div>
   );
 }

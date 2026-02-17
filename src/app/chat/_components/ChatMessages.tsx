@@ -9,6 +9,7 @@ import { atomDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { useEffect, useRef, useState } from "react";
 import { Clipboard, Check } from "lucide-react";
 import Image from "next/image";
+import { copyToClipboard } from "@/lib/utils";
 
 export function ChatMessages({
   messages,
@@ -22,147 +23,192 @@ export function ChatMessages({
   }, [messages, loading]);
 
   return (
-    <section className="flex-1 h-full relative overflow-y-auto px-2 py-6 bg-background">
-      {messages.length === 0 && !loading && apiStatus === "online" && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xl italic">Let’s start a conversation...</span>
-        </div>
-      )}
+    <section className="w-full h-full overflow-y-auto px-4 pt-4 pb-4 md:pt-8 bg-background/50 scroll-smooth scrollbar-none">
+      <div className="max-w-6xl mx-auto pb-40">
 
-      {apiStatus === "offline" && (
-        <div className="fixed top-14 left-0 right-0 z-50">
-          <div className="bg-red-500 text-white text-center py-2 px-4 shadow-md">
-            <p className="font-semibold">⚠️ Ollama API is offline</p>
-            <p className="text-sm">
-              Please configure the API host in Settings.
-            </p>
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {messages.map((msg, idx) => {
-          const isUser = msg.role === "user";
-
-          return (
-            <div key={idx}>
-              <div
-                className={clsx(
-                  "flex w-full md:p-4",
-                  isUser ? "justify-end" : "justify-start"
-                )}
-              >
-                {!isUser && (
-                  <div className="w-10 h-10 rounded-full bg-muted text-xs font-bold flex items-center justify-center border shrink-0">
-                    <Image
-                      src="/assets/logo-nobg.png"
-                      alt="AH"
-                      width={50}
-                      height={50}
-                      className="rounded-full"
-                    />
-                  </div>
-                )}
-                <div
-                  className={clsx(
-                    "px-2 py-2 rounded-md",
-                    "max-w-full sm:max-w-[80%] w-fit",
-                    "whitespace-pre-wrap break-words overflow-wrap break-word",
-                    "overflow-hidden",
-                    isUser ? "bg-indigo-600 text-white" : ""
-                  )}
-                >
-                  <div className="prose dark:prose-invert max-w-full prose-pre:overflow-x-auto prose-code:break-words relative">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkEmoji]}
-                      components={{
-                        a: ({ href, children }) => (
-                          <a
-                            href={href || "#"}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 dark:text-blue-400 underline underline-offset-2 hover:text-blue-800"
-                          >
-                            {children}
-                          </a>
-                        ),
-                        code({ className, children, ...props }) {
-                          const match = /language-(\w+)/.exec(className || "");
-                          const [copied, setCopied] = useState(false);
-                          const codeText = String(children).replace(/\n$/, "");
-
-                          const handleCopy = () => {
-                            navigator.clipboard.writeText(codeText);
-                            setCopied(true);
-                            setTimeout(() => setCopied(false), 2000);
-                          };
-
-                          return match ? (
-                            <div className="flex flex-row items-center rounded-md">
-                              <div className="flex flex-col border rounded-md bg-background overflow-x-auto">
-                                <div className="flex items-center justify-between px-1 border-b">
-                                  <span className="text-sm font-mono">
-                                    {match[1]}
-                                  </span>
-                                  <button
-                                    onClick={handleCopy}
-                                    className="opacity-70 hover:opacity-100 transition-opacity p-1 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                                    aria-label="Copy code"
-                                    type="button"
-                                  >
-                                    {copied ? (
-                                      <Check size={16} />
-                                    ) : (
-                                      <Clipboard size={16} />
-                                    )}
-                                  </button>
-                                </div>
-
-                                <div className="overflow-x-auto">
-                                  <SyntaxHighlighter
-                                    style={atomDark}
-                                    language={match[1]}
-                                    PreTag="div"
-                                    className="rounded-md"
-                                    wrapLongLines
-                                    {...(props as any)}
-                                  >
-                                    {codeText}
-                                  </SyntaxHighlighter>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <code
-                              className="bg-black/10 px-1 rounded break-words text-sm"
-                              {...props}
-                            >
-                              {codeText}
-                            </code>
-                          );
-                        },
-                      }}
-                    >
-                      {msg.content}
-                    </ReactMarkdown>
-                  </div>
-                </div>
-              </div>
+        {/* Empty State */}
+        {messages.length === 0 && !loading && apiStatus === "online" && (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in fade-in zoom-in duration-500">
+            <div className="h-20 w-20 bg-background rounded-2xl flex items-center justify-center shadow-xl ring-1 ring-border/50">
+              <Image
+                src="/assets/logo-nobg.png"
+                alt="AI"
+                width={72}
+                height={72}
+                className="opacity-90"
+              />
             </div>
-          );
-        })}
 
-        {loading && (
-          <div className="flex items-center gap-2 ml-6 text-sm text-muted-foreground">
-            <div className="flex gap-1 items-center">
-              <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.3s]" />
-              <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.15s]" />
-              <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" />
+            <div className="space-y-2 max-w-lg">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                How can I help you today?
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Ask anything — code, ideas, debugging, research.
+              </p>
             </div>
           </div>
         )}
 
-        <div ref={bottomRef} />
+        {/* Offline State */}
+        {apiStatus === "offline" && (
+          <div className="w-full flex justify-center py-10">
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive py-2 px-6 rounded-full flex items-center gap-3">
+              <span className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse" />
+              <p className="text-sm font-semibold">Ollama Connection Lost</p>
+            </div>
+          </div>
+        )}
+
+        {/* Messages */}
+        <div className="space-y-6 md:space-y-8">
+          {messages.map((msg, idx) => {
+            const isUser = msg.role === "user";
+
+            return (
+              <div
+                key={idx}
+                className={clsx(
+                  "flex w-full",
+                  isUser ? "justify-end" : "justify-start"
+                )}
+              >
+                <div
+                  className={clsx(
+                    "flex gap-3 md:gap-4 max-w-6xl w-full",
+                    isUser ? "flex-row-reverse" : "flex-row"
+                  )}
+                >
+                  {/* Avatar */}
+                  <div className="shrink-0 pt-0.5">
+                    {isUser ? (
+                      <div className="w-12 h-12 rounded-full bg-secondary border border-primary/20 flex items-center justify-center text-primary text-xs font-bold">
+                        You
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-background border border-border/50 flex items-center justify-center overflow-hidden">
+                        <Image
+                          src="/assets/logo-nobg.png"
+                          alt="AI"
+                          width={32}
+                          height={32}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bubble */}
+                  <div className="relative min-w-0 max-w-[85%] md:max-w-[80%]">
+                    <div
+                      className={clsx(
+                        "px-5 py-3 shadow-sm border text-base leading-relaxed",
+                        "bg-primary/5 border-primary/10",
+                        isUser
+                          ? "rounded-[22px] rounded-tr-md"
+                          : "rounded-[22px] rounded-tl-md"
+                      )}
+                    >
+                      {isUser ? (
+                        <div className="whitespace-pre-wrap break-words">
+                          {msg.content}
+                        </div>
+                      ) : (
+                        <div className="prose dark:prose-invert max-w-none prose-pre:overflow-x-auto prose-pre:bg-muted/40 prose-pre:border prose-pre:border-border/40">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkEmoji]}
+                            components={{
+                              a: ({ href, children }) => (
+                                <a
+                                  href={href || "#"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary underline underline-offset-4"
+                                >
+                                  {children}
+                                </a>
+                              ),
+
+                              code({ className, children, ...props }) {
+                                const match = /language-(\w+)/.exec(className || "");
+                                const [copied, setCopied] = useState(false);
+                                const codeText = String(children).replace(/\n$/, "");
+
+                                const handleCopy = async () => {
+                                  const success = await copyToClipboard(codeText);
+                                  if (success) {
+                                    setCopied(true);
+                                    setTimeout(() => setCopied(false), 2000);
+                                  }
+                                };
+
+                                return match ? (
+                                  <div className="not-prose my-4 rounded-xl border bg-background/40 overflow-hidden">
+                                    <div className="flex items-center justify-between px-3 py-1.5 bg-muted/40 border-b">
+                                      <span className="text-xs font-mono text-muted-foreground uppercase">
+                                        {match[1]}
+                                      </span>
+
+                                      <button
+                                        onClick={handleCopy}
+                                        className="text-muted-foreground hover:text-foreground p-1.5"
+                                      >
+                                        {copied ? (
+                                          <Check size={14} />
+                                        ) : (
+                                          <Clipboard size={14} />
+                                        )}
+                                      </button>
+                                    </div>
+
+                                    <div className="overflow-x-auto p-4 text-sm font-mono">
+                                      <SyntaxHighlighter
+                                        style={atomDark}
+                                        language={match[1]}
+                                        PreTag="div"
+                                        customStyle={{
+                                          margin: 0,
+                                          padding: 0,
+                                          background: "transparent",
+                                        }}
+                                        wrapLongLines
+                                        {...(props as any)}
+                                      >
+                                        {codeText}
+                                      </SyntaxHighlighter>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <code className="bg-muted px-1.5 py-0.5 rounded-md text-sm font-mono border">
+                                    {codeText}
+                                  </code>
+                                );
+                              },
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Typing Indicator */}
+          {loading && (
+            <div className="flex w-full justify-start pl-12 md:pl-16">
+              <div className="bg-primary/5 border border-primary/10 rounded-[22px] rounded-tl-md px-4 py-3 inline-flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" />
+              </div>
+            </div>
+          )}
+
+          <div ref={bottomRef} className="h-4" />
+        </div>
       </div>
     </section>
   );

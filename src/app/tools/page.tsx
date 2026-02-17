@@ -3,8 +3,10 @@ import ToolPage from "./_components/ToolsPage";
 
 export default function ToolsPage() {
   return (
-    <Suspense>
-      <ToolPage />
-    </Suspense>
+    <div className="min-h-screen flex flex-col">
+      <Suspense>
+        <ToolPage />
+      </Suspense>
+    </div>
   );
 }

@@ -3,9 +3,9 @@
 import Hero from "./_components/section/Hero";
 import Features from "./_components/section/Feature";
 import Faq from "./_components/section/FAQ";
-import Footer from "@/components/Footer";
 import ChatPage from "./chat/page";
 import { isTauri } from "@tauri-apps/api/core";
+import Footer from "@/components/Footer";
 
 export default function HomePage() {
   return (
@@ -19,7 +19,9 @@ export default function HomePage() {
           <Hero />
           <Features />
           <Faq />
-          <Footer />
+          <div className="px-4 py-4 md:py-6">
+            <Footer />
+          </div>
         </>
       )}
     </div>

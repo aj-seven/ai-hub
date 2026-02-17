@@ -2,80 +2,108 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "next-themes";
-import type { ReactNode } from "react";
+import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5, // Accessability: allow zooming
+  userScalable: true,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+};
+
+export const metadata: Metadata = {
+  title: {
+    default: "AI Hub – Chat with AI, Create Instantly",
+    template: "%s | AI Hub",
+  },
+  description:
+    "AI Hub lets you chat with powerful AI models like Ollama for real-time assistance, content generation, and productivity tools—all in one place.",
+  keywords: [
+    "AI",
+    "Chatbot",
+    "Ollama",
+    "GPT-4",
+    "Claude",
+    "Gemini",
+    "Content Generation",
+    "Productivity",
+    "Writing Assistant",
+  ],
+  authors: [{ name: "Aj7" }],
+  creator: "Aj7",
+  publisher: "AI Hub",
+  metadataBase: new URL("https://ai-hubx.vercel.app"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://ai-hubx.vercel.app",
+    title: "AI Hub – Chat with AI, Create Instantly",
+    description:
+      "Talk to advanced AI models, generate content, brainstorm ideas, and more using AI Hub—your smart assistant for creativity and productivity.",
+    siteName: "AI Hub",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AI Hub Preview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Hub – Chat with AI, Create Instantly",
+    description:
+      "Real-time AI chat powered by Ollama. Create, assist, and innovate using AI Hub’s intelligent tools.",
+    images: ["/og-image.png"],
+    creator: "@aj7_dev",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  verification: {
+    google: "028qjEyCwX-DFd1i4ERqtBsXSHh3FLgAQbdTQx-h4LU",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  appleWebApp: {
+    capable: true,
+    title: "AI Hub",
+    statusBarStyle: "default",
+  },
+};
+
 type RootLayoutProps = {
-  children: ReactNode;
+  children: React.ReactNode;
 };
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="UTF-8" />
-        <meta name="author" content="Aj7" />
-        <meta name="robots" content="index, follow" />
-        <meta name="theme-color" content="#ffffff" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-
-        <title>AI Hub – Chat with AI, Create Instantly</title>
-
-        <meta
-          name="description"
-          content="AI Hub lets you chat with powerful AI models like Ollama for real-time assistance, content generation, and productivity tools—all in one place."
-        />
-
-        {/* Open Graph Meta */}
-        <meta property="og:type" content="website" />
-        <meta
-          property="og:title"
-          content="AI Hub – Chat with AI, Create Instantly"
-        />
-        <meta
-          property="og:description"
-          content="Talk to advanced AI models, generate content, brainstorm ideas, and more using AI Hub—your smart assistant for creativity and productivity."
-        />
-        <meta property="og:url" content="https://ai-hubx.vercel.app" />
-        <meta
-          property="og:image"
-          content="https://ai-hubx.vercel.app/og-image.png"
-        />
-
-        {/* Twitter Card Meta */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta
-          name="twitter:title"
-          content="AI Hub – Chat with AI, Create Instantly"
-        />
-        <meta
-          name="twitter:description"
-          content="Real-time AI chat powered by Ollama. Create, assist, and innovate using AI Hub’s intelligent tools."
-        />
-        <meta
-          name="twitter:image"
-          content="https://ai-hubx.vercel.app/og-image.png"
-        />
-        <meta name="twitter:creator" content="@your_twitter_handle" />
-
-        {/* Viewport and Icons */}
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=3.0, minimum-scale=1.0, user-scalable=yes"
-        />
-        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-        {/* google site verification*/}
-        <meta name="google-site-verification" content="028qjEyCwX-DFd1i4ERqtBsXSHh3FLgAQbdTQx-h4LU" />
-      </head>
-
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="light">
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased min-h-screen bg-background font-sans">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Navbar />
-          {children}
-          <Toaster />
+          <main className="flex-1">{children}</main>
+          <Toaster position="top-right" />
           <Analytics />
         </ThemeProvider>
       </body>

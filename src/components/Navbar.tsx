@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Settings2,
   Menu,
   X,
   ScrollText,
@@ -13,8 +12,9 @@ import {
   BotMessageSquare,
   PenTool,
   Github,
+  PaperclipIcon,
+  LockIcon,
 } from "lucide-react";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import {
   Sheet,
   SheetContent,
@@ -26,63 +26,44 @@ import Settings from "./Settings";
 import Image from "next/image";
 import { CustomDialog } from "./ui/custom-dialog";
 import ApiStatus from "./ApiStatus";
-import { isTauri } from "@tauri-apps/api/core";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const navLinks = [
     { name: "Chat", href: "/chat", icon: BotMessageSquare },
     { name: "Tools", href: "/get-started", icon: PenTool },
     { name: "Prompts", href: "/prompts", icon: ScrollText },
     { name: "About", href: "/about", icon: Info },
+    { name: "Terms", href: "/terms", icon: PaperclipIcon },
+    { name: "Privacy", href: "/privacy", icon: LockIcon },
   ];
 
   return (
     <nav className="sticky top-0 z-40 w-full border-b bg-background">
-      <div className="max-w-7xl mx-auto px-3">
+      <div className="max-w-8xl mx-auto px-3 md:px-22">
         <div className="flex items-center justify-between h-14">
-          {/* Logo Section */}
-          {!isTauri() && (
-            <Link href="/" className="flex items-center gap-1">
-              <div className="rounded-lg">
-                <Image
-                  src="/assets/logo-nobg.png"
-                  alt="AI Hub Logo"
-                  width={42}
-                  height={42}
-                />
-              </div>
-              <span className="text-xl font-bold mt-4">AI Hub</span>
-            </Link>
-          )}
+          {/* Logo (Always Left — Web + Tauri Same) */}
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/assets/logo-nobg.png"
+              alt="AI Hub Logo"
+              width={36}
+              height={36}
+              priority
+            />
+            <span className="text-lg font-semibold">AI Hub</span>
+          </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`flex items-center gap-1 font-medium hover:bg-gray-200 
-                  dark:hover:bg-gray-800 rounded-md p-1 transition-all ${
-                    pathname === link.href ? "text-blue-600" : ""
-                  }`}
-              >
-                <link.icon className="h-4 w-4" />
-                {link.name}
-              </Link>
-            ))}
-          </div>
-
-          {/* Desktop Activity Section */}
-          <div className="hidden md:flex items-center gap-4">
+          {/* Right Controls */}
+          <div className="flex items-center gap-2">
             {/* GitHub */}
             <Link
               href="https://github.com/aj-seven/ai-hub"
               target="_blank"
-              className="flex items-center gap-1 hover:bg-gray-200 dark:hover:bg-gray-800 
-               rounded-md p-2 transition-all"
+              className="flex items-center hover:bg-gray-200 dark:hover:bg-gray-800 
+              rounded-md p-2 transition-all"
             >
               <Github className="h-5 w-5" />
             </Link>
@@ -90,82 +71,58 @@ export default function Navbar() {
             {/* API Status */}
             <ApiStatus />
 
-            {/* Settings Drawer */}
-            <Drawer>
-              <DrawerTrigger asChild>
+            {/* Sidebar Menu */}
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  size="default"
+                  size="icon"
                   className="cursor-pointer"
                 >
-                  <Settings2 />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="p-3 max-w-3xl mx-auto">
-                <Settings />
-              </DrawerContent>
-            </Drawer>
-          </div>
-
-          {/* Mobile Section */}
-          <div className="md:hidden flex items-center gap-3">
-            {/* GitHub */}
-            <Link
-              href="https://github.com/aj-seven/ai-hub"
-              target="_blank"
-              className="flex items-center hover:bg-gray-200 dark:hover:bg-gray-800 
-               rounded-md p-2 transition-all"
-            >
-              <Github className="h-6 w-6 text-gray-700 dark:text-gray-200" />
-            </Link>
-
-            {/* API Status */}
-            <ApiStatus />
-
-            {/* Mobile Menu Button */}
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="default">
-                  {mobileOpen ? (
-                    <X className="h-6 w-6" />
+                  {open ? (
+                    <X className="h-5 w-5" />
                   ) : (
-                    <Menu className="h-6 w-6" />
+                    <Menu className="h-5 w-5" />
                   )}
                 </Button>
               </SheetTrigger>
 
-              <SheetContent side="right" className="w-[250px] p-3">
-                <SheetTitle className="text-xl mb-2">Menu</SheetTitle>
+              <SheetContent
+                side="right"
+                className="w-[280px] px-2 py-4 cursor-pointer"
+              >
+                <SheetTitle className="text-xl">AI Hub</SheetTitle>
 
-                <div className="flex flex-col space-y-3">
+                <div className="border-t" />
+
+                {/* Navigation */}
+                <div className="flex flex-col">
                   {navLinks.map((link) => (
                     <Link
                       key={link.name}
                       href={link.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-2 p-1 text-base font-medium hover:bg-foreground/20 rounded-md transition ${
-                        pathname === link.href
-                          ? "text-blue-600"
-                          : "text-gray-800 dark:text-gray-200"
-                      }`}
+                      onClick={() => setOpen(false)}
+                      className={`flex items-center gap-2 px-2 py-2 text-md font-medium rounded-md transition
+      hover:bg-muted ${pathname === link.href ? "bg-muted text-blue-500" : ""}`}
                     >
                       <link.icon className="h-5 w-5" />
                       {link.name}
                     </Link>
                   ))}
-
-                  {/* Settings inside drawer */}
-                  <div className="pt-3 border-t border-muted">
-                    <CustomDialog
-                      title="Settings"
-                      description="Manage settings for AI Hub"
-                      triggerLabel="Settings"
-                      icon={<Settings2Icon />}
-                    >
-                      <Settings />
-                    </CustomDialog>
-                  </div>
                 </div>
+
+                {/* Divider */}
+                <div className="border-t" />
+
+                {/* Settings */}
+                <CustomDialog
+                  title="Settings"
+                  description="Manage settings for AI Hub"
+                  triggerLabel="Settings"
+                  icon={<Settings2Icon />}
+                >
+                  <Settings />
+                </CustomDialog>
               </SheetContent>
             </Sheet>
           </div>

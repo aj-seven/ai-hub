@@ -18,13 +18,13 @@ export default function Contribution() {
           href="https://github.com/aj-seven/ai-hub/issues/new"
           target="_blank"
         >
-          <Button variant="outline" size="sm" className="flex gap-1">
+          <Button variant="outline" size="sm" className="cursor-pointer">
             <Github className="w-4 h-4" />
             Create Issue
           </Button>
         </Link>
         <Link href="https://github.com/aj-seven/ai-hub/pulls" target="_blank">
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" className="cursor-pointer">
             Contribute
           </Button>
         </Link>

@@ -11,10 +11,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
 import { tools } from "@/app/_components/AITools";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import Footer from "@/components/Footer";
 
 const categories = [
   "All",
@@ -41,7 +41,6 @@ export default function getStartedPage() {
       const response = await apiClient.getStatus();
       if (response.success) {
         setApiStatus("online");
-        //setAvailableProviders(response.providers || []);
       } else {
         setApiStatus("offline");
       }
@@ -67,90 +66,115 @@ export default function getStartedPage() {
   };
 
   return (
-    <>
-      <section className="px-3 mb-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-4">
-            <h3 className="text-3xl font-bold">Choose Your AI Tool</h3>
-            <p className="text-lg">
-              Select from our collection of powerful AI-powered writing
-              assistants
-            </p>
-          </div>
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <section className="relative px-4 py-10 md:py-14 overflow-hidden">
+        <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:bg-grid-slate-700/25 dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.5))]" />
+        <div className="relative max-w-7xl mx-auto text-center space-y-3">
+          <Badge
+            variant="outline"
+            className="mb-2 py-1 px-3 backdrop-blur border-primary/20 bg-primary/5 text-primary"
+          >
+            🎉 Explore AI Tools
+          </Badge>
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 dark:from-white dark:via-gray-200 dark:to-white bg-clip-text text-transparent pb-1">
+            Supercharge Your Workflow
+          </h1>
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Access a suite of powerful AI assistants designed to elevate your
+            creativity and productivity.
+          </p>
+        </div>
+      </section>
 
+      <section className="pb-12">
+        <div className="max-w-7xl mx-auto space-y-6 px-4 py-4 md:py-6">
           {/* Category Filter */}
-          <div className="flex flex-wrap justify-center gap-2 mb-4">
+          <div className="flex flex-wrap justify-center gap-2">
             {categories.map((category) => (
-              <Button
+              <button
                 key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="sm"
                 onClick={() => setSelectedCategory(category)}
-                className={
-                  selectedCategory === category
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                    : ""
-                }
+                className={`
+                  px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer
+                  ${
+                    selectedCategory === category
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-105"
+                      : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-transparent hover:border-border"
+                  }
+                `}
               >
                 {category}
-              </Button>
+              </button>
             ))}
           </div>
-
           {/* Tools Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredTools.map((tool) => (
               <Card
                 key={tool.id}
-                className={`group hover:shadow-md transition-all duration-300 cursor-pointer border hover:bg-white/10 ${
-                  apiStatus === "offline" ? "opacity-50" : ""
-                }`}
+                className={`
+                  group relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm 
+                  hover:bg-card hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 
+                  transition-all duration-300 cursor-pointer h-full flex flex-col
+                  ${apiStatus === "offline" ? "opacity-60 grayscale" : ""}
+                `}
                 onClick={() => handleToolSelect(tool.id)}
               >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="p-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg group-hover:scale-110 transition-transform duration-300">
+                <CardHeader>
+                  <div className="flex items-start justify-between mb-2">
+                    <div
+                      className={`
+                      p-3 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 
+                      text-primary group-hover:scale-110 group-hover:rotate-3 transition-all duration-300
+                    `}
+                    >
                       {tool.icon}
                     </div>
-                    <div className="flex flex-col gap-1">
-                      {tool.popular && (
-                        <Badge
-                          variant="default"
-                          className="bg-orange-500 hover:bg-orange-600 text-xs"
-                        >
-                          Popular
-                        </Badge>
-                      )}
-                      {tool.new && (
-                        <Badge
-                          variant="default"
-                          className="bg-green-500 hover:bg-green-600 text-xs"
-                        >
-                          New
-                        </Badge>
-                      )}
-                    </div>
+                    {(tool.popular || tool.new) && (
+                      <div className="flex gap-2">
+                        {tool.popular && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-500/10 text-orange-600 dark:text-orange-400">
+                            Popular
+                          </span>
+                        )}
+                        {tool.new && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-500/10 text-green-600 dark:text-green-400">
+                            New
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
+                  <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors">
                     {tool.title}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <CardDescription className="mb-2 leading-relaxed">
+                <CardContent className="flex-1 flex flex-col justify-between gap-4">
+                  <CardDescription className="text-sm leading-relaxed line-clamp-2">
                     {tool.description}
                   </CardDescription>
-                  <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-xs">
+
+                  <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-auto">
+                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">
                       {tool.category}
-                    </Badge>
-                    <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300" />
+                    </span>
+                    <div className="flex items-center text-xs font-medium text-primary opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                      Try Now <ArrowRight className="ml-1 h-3 w-3" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+          {filteredTools.length === 0 && (
+            <div className="text-center py-20 text-muted-foreground">
+              <p>No tools found in this category.</p>
+            </div>
+          )}
+          <Footer />
         </div>
       </section>
-    </>
+    </div>
   );
 }
