@@ -1,93 +1,132 @@
 <p align="center">
-  <img src="public/assets/logo-nobg.png"  height="128">
-  <h2 align="center"><a href="https://ai-hubx.vercel.app"> ai-hub </a></h2>
-  <p align="center">Your AI Hub for Chat & Content Creation.<p>
-  <p align="center">
-   <a href='#'><img src=https://img.shields.io/badge/Maintained%3F-yes-green.svg></img><a/>
-<img src="https://deploy-badge.vercel.app/vercel/ai-hubx" alt="Vercel Deploy"></img>
-  </p>
+  <img src="public/assets/logo-nobg.png" height="120" />
 </p>
 
-## 🚀 Features
+<h2 align="center">
+  <a href="https://ai-hubx.vercel.app">AI Hub</a>
+</h2>
 
-- **Desktop App** - Supports Desktop app for better UI via Tauri.
-- **Chat Interface** — Converse with AI models like GPT, Claude, LLaMA (Ollama), Gemini.
-- **Email Generator** — Instantly write professional or casual emails with tone control.
-- **Tweet Generator** — Generate engaging tweets and social posts in seconds.
-- **Blog Writer** — Create SEO-ready blog drafts tailored to your prompts.
+<p align="center">
+  Your AI Hub for Chat & Content Creation.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Maintained-yes-green.svg" />
+  <img src="https://deploy-badge.vercel.app/vercel/ai-hubx" alt="Vercel Deploy" />
+
+[![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Faj-seven%2Fai-hub&countColor=%23263759)](https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Faj-seven%2Fai-hub)
+</p>
+
+![Main Screenshot](https://github.com/user-attachments/assets/90c6a41a-e843-4736-ba54-5c2cc2ee7aa2)
+
+## ⭐ Features
+
+- **Desktop App** — Native desktop support via Tauri.
+- **Chat Interface** — Converse with GPT, Claude, LLaMA (Ollama), Gemini.
+- **Email Generator** — Generate professional or casual emails with tone control.
+- **Tweet Generator** — Create engaging tweets & social posts instantly.
+- **Blog Writer** — Generate SEO-ready blog drafts.
 - **Grammar Fixer** — Instantly clean and correct your writing.
-- **Prompt Playground** — Test prompts across different LLM providers with one click.
-- **Multi-model support** — Easily switch between local (Ollama) and cloud-based models.
-- **Privacy-first** — Your API keys are stored in your browser only. Your data is yours.
+- **Prompt Playground** — Test prompts across different LLM providers.
+- **Multi-model Support** — Switch between local (Ollama) & cloud models.
+- **Privacy-first** — API keys stored locally in browser only.
 
 ## Tauri Desktop Support
 
-- Supports Ollama API calls in easy way and usage.
-- Removes CORS issues.
-- Just Add ollama serving IP in settings and start using ollama models via chat interface.
-- More Features yet to come.
-- Download from [here](https://github.com/aj-seven/ai-hub/releases)
+- Native desktop performance
+- Simplified Ollama integration
+- Removes CORS issues
+- Add your Ollama serving IP in settings
+- More features coming soon
 
-## Demo Screenshots
+👉 Download desktop builds from:
+https://github.com/aj-seven/ai-hub/releases
 
-![Screenshot from 2025-06-23 17-11-40](https://github.com/user-attachments/assets/9146fefc-2671-4cd7-89e2-3aaf0cb4c4cf)
-<details closed>
-<summary>
-<h4> More here </h4>
-</summary>
-  
-![Screenshot from 2025-06-23 17-36-27](https://github.com/user-attachments/assets/080e54cd-2262-4e39-bef2-e96b27f7c655)
-![Screenshot from 2025-06-23 17-36-15](https://github.com/user-attachments/assets/2dd10693-4e3c-4580-a3fe-ed1378cb1b0e)
-![Screenshot from 2025-06-23 17-21-38](https://github.com/user-attachments/assets/e74903f9-cdf2-40fa-b993-e51a0faa0d41)
-![Screenshot from 2025-06-23 17-18-16](https://github.com/user-attachments/assets/d7bb8da5-96c4-47c0-8eeb-f52ea86bda11)
-![Screenshot from 2025-06-23 17-18-43](https://github.com/user-attachments/assets/9b5f7046-c1d6-456b-bab2-4f458f9da162)
+---
+
+## Showcase
+
+<details open>
+<summary>Click to expand</summary>
+<img width="1424" height="829" alt="Screenshot_20260218_121158" src="https://github.com/user-attachments/assets/04772341-8b67-4b7d-8bca-0e0a73e7e1f2" />
+<img width="1424" height="829" alt="Screenshot_20260218_121430" src="https://github.com/user-attachments/assets/9a1d4e23-dd71-44b9-ad31-1381dd969cbb" />
+<img width="1424" height="829" alt="Screenshot_20260218_121158" src="https://github.com/user-attachments/assets/98f570eb-bbef-480b-bddd-d7cf902f084e" />
+<img width="1424" height="829" alt="Screenshot_20260218_121214" src="https://github.com/user-attachments/assets/8e9cefad-de3b-457e-81b1-a53b2fa5aad4" />
+<img width="1424" height="829" alt="Screenshot_20260218_121251" src="https://github.com/user-attachments/assets/8aee73a0-071b-4a29-beb2-6cff9497f49c" />
+<img width="1424" height="829" alt="Screenshot_20260218_121232" src="https://github.com/user-attachments/assets/4f74bac3-86cd-43f5-85c2-e49fe2052062" />
 </details>
 
-## 🛠️ Tech Stack
+---
 
-- **Next.js** — API routes & frontend
-- **TypeScript** — Safe & modern coding experience
-- **Tailwind CSS** — Fully responsive and accessible UI
-- **ShadCN/UI** — UI components for modern UX
+## 🛠 Tech Stack
+
+- **Next.js** — Frontend & API routes
+- **TypeScript** — Type-safe development
+- **Tailwind CSS** — Responsive UI
+- **ShadCN/UI** — Modern component system
+- **Tauri** — Desktop application framework
 
 ## 📦 Getting Started
 
-1. **Clone this repo**  
-   ```bash
-   git clone https://github.com/aj-seven/ai-hub.git
-   cd ai-hub
-   ```
+### Clone the Repository
 
-2. **Install dependencies**  
-   ```bash
-   pnpm install
-   # or
-   yarn install
-   ```
+```bash
+git clone https://github.com/aj-seven/ai-hub.git
+cd ai-hub
+```
 
-3. **Run the dev server**  
-   ```bash
-   pnpm run dev
-   # or
-   npm run dev
-   ```
+### Install Dependencies
 
-5. **Access the app**  
-   Visit [http://localhost:3000](http://localhost:3000)
+```bash
+pnpm install
+# or
+yarn install
+# or
+npm install
+```
 
-## Local Model with Ollama
+### Run Development Server
 
-To run local models with Ollama:
+```bash
+pnpm run dev
+# or
+npm run dev
+```
 
-- Install Ollama: https://ollama.com
-- Start a model: `ollama run llama3.2`
-- The app auto-connects if Ollama is running on `http://localhost:11434`
+### Open in Browser
 
-## Contributing
+Visit:
+http://localhost:3000
 
-Feel free to fork the repo, suggest changes, or submit pull requests.
+---
+
+## Using Local Models with Ollama
+
+1. Install Ollama  
+   https://ollama.com
+
+2. Run a model:
+
+```bash
+ollama run llama3.2
+```
+
+3. Ensure Ollama runs at:
+
+```
+http://localhost:11434
+```
+
+AI Hub auto-connects if Ollama is active.
+
+## 🤝 Contributing
+
 Contributions are welcome!
 
-## License
+- Fork the repo
+- Create a feature branch
+- Submit a pull request
 
-MIT © 2025 AI Hub Team
+## 📄 License
+
+MIT © 2026 AI Hub Team
