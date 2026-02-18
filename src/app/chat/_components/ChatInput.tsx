@@ -163,7 +163,7 @@ export function ChatInput({
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-2 text-muted-foreground">
               <div className="flex items-center gap-1.5">
-                <div className="md:hidden">
+                <div className="lg:hidden">
                   <Dialog.Root open={drawerOpen} onOpenChange={setDrawerOpen}>
                     <Dialog.Trigger asChild>
                       <Button

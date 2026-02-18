@@ -437,7 +437,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-[calc(100dvh-3.5rem)] w-full overflow-hidden bg-background">
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex w-[280px] flex-col border-r bg-muted/10 shrink-0 h-full transition-all duration-300 ease-in-out">
+      <div className="hidden lg:flex w-[280px] flex-col border-r bg-muted/10 shrink-0 h-full transition-all duration-300 ease-in-out">
         <ChatSidebar
           chats={chats}
           projects={projects}

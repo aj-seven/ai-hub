@@ -42,7 +42,7 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-40 w-full border-b bg-background">
-      <div className="max-w-8xl mx-auto px-3 md:px-22">
+      <div className="max-w-8xl mx-auto px-3 lg:px-22">
         <div className="flex items-center justify-between h-14">
           {/* Logo (Always Left — Web + Tauri Same) */}
           <Link href="/" className="flex items-center gap-2">
