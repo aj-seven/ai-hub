@@ -14,6 +14,7 @@ import { copyToClipboard } from "@/lib/utils";
 export function ChatMessages({
   messages,
   apiStatus,
+  apiError,
   loading,
 }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -53,9 +54,14 @@ export function ChatMessages({
         {/* Offline State */}
         {apiStatus === "offline" && (
           <div className="w-full flex justify-center py-10">
-            <div className="bg-destructive/10 border border-destructive/20 text-destructive py-2 px-6 rounded-full flex items-center gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse" />
-              <p className="text-sm font-semibold">Ollama Connection Lost</p>
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive py-2 px-6 rounded-3xl flex flex-col items-center gap-2 max-w-md text-center">
+              <div className="flex items-center gap-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse" />
+                <p className="text-sm font-semibold">Ollama Connection Lost</p>
+              </div>
+              {apiError && (
+                <p className="text-[10px] opacity-70 font-mono break-all">{apiError}</p>
+              )}
             </div>
           </div>
         )}

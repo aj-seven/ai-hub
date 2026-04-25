@@ -23,6 +23,7 @@ export type Chat = {
 export interface ChatMessagesProps {
   messages: Message[];
   apiStatus: string | null;
+  apiError?: string;
   loading: boolean;
 }
 
@@ -45,6 +46,8 @@ export interface ChatSidebarProps {
   onClose?: () => void;
 }
 
+import { Model } from "./api-client";
+
 export interface ChatInputProps {
   input: string;
   setInput: (val: string) => void;
@@ -56,6 +59,7 @@ export interface ChatInputProps {
   systemMessage: string;
   setSystemMessage: (msg: string) => void;
   apiStatus: string | null;
+  onModelDataUpdate?: (models: Model[]) => void;
   sidebarProps: {
     chats: Chat[];
     projects: Project[];
