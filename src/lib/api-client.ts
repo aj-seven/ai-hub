@@ -32,96 +32,107 @@ class APIClient {
     const apiKey = localStorage.getItem(`api_key_${provider}`);
 
     try {
-      if (provider === "openai") {
-        if (!apiKey) return [
-          { id: "gpt-4o", name: "GPT-4o", value: "gpt-4o", label: "GPT-4o" },
-          { id: "gpt-4o-mini", name: "GPT-4o Mini", value: "gpt-4o-mini", label: "GPT-4o Mini" },
-        ];
-
-        const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
-        const data = await openai.models.list();
-        return data.data
-          .filter((m) => m.id.startsWith("gpt-") || m.id.startsWith("o1-"))
-          .map((m) => ({
-            id: m.id,
-            name: m.id,
-            value: m.id,
-            label: m.id,
-          }));
-      }
-
-      if (provider === "anthropic") {
-        if (!apiKey) return [
-          { id: "claude-3-5-sonnet-latest", name: "Claude 3.5 Sonnet", value: "claude-3-5-sonnet-latest", label: "Claude 3.5 Sonnet" },
-          { id: "claude-3-7-sonnet-latest", name: "Claude 3.7 Sonnet", value: "claude-3-7-sonnet-latest", label: "Claude 3.7 Sonnet" },
-        ];
-
-        try {
-          const anthropic = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
-          const data = await anthropic.models.list();
-          return data.data.map((m) => ({
-            id: m.id,
-            name: m.display_name || m.id,
-            value: m.id,
-            label: m.display_name || m.id,
-          }));
-        } catch (e) {
-          console.warn("Failed to fetch Anthropic models, using fallback", e);
-        }
-
-        return [
-          { id: "claude-3-7-sonnet-20250219", name: "Claude 3.7 Sonnet", value: "claude-3-7-sonnet-20250219", label: "Claude 3.7 Sonnet" },
-          { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet" },
-          { id: "claude-3-opus-20240229", name: "Claude 3 Opus", value: "claude-3-opus-20240229", label: "Claude 3 Opus" },
-          { id: "claude-3-sonnet-20240229", name: "Claude 3 Sonnet", value: "claude-3-sonnet-20240229", label: "Claude 3 Sonnet" },
-          { id: "claude-3-haiku-20240307", name: "Claude 3 Haiku", value: "claude-3-haiku-20240307", label: "Claude 3 Haiku" },
-        ];
-      }
-
-      if (provider === "google") {
-        if (!apiKey) return [
-          { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
-          { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash", value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" },
-        ];
-
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-        if (!response.ok) throw new Error("Failed to fetch Google models");
-        const data = await response.json();
-        return data.models
-          .filter((m: any) => m.supportedGenerationMethods.includes("generateContent"))
-          .map((m: any) => {
-            const id = m.name.replace("models/", "");
-            return {
-              id: id,
-              name: m.displayName || id,
-              value: id,
-              label: m.displayName || id,
-            };
-          });
-      }
-
-      if (provider === "cohere") {
-        if (!apiKey) return [
-          { id: "command-r-plus", name: "Command R+", value: "command-r-plus", label: "Command R+" },
-          { id: "command-r", name: "Command R", value: "command-r", label: "Command R+" },
-        ];
-
-        const cohere = new CohereClient({ token: apiKey });
-        const data = await cohere.models.list();
-        return data.models
-          ?.filter((m) => m.endpoints?.includes("chat"))
-          .map((m) => ({
-            id: m.name ?? "",
-            name: m.name ?? "",
-            value: m.name ?? "",
-            label: m.name ?? "",
-          })) || [];
+      switch (provider) {
+        case "openai": return await this.getOpenAIModels(apiKey);
+        case "anthropic": return await this.getAnthropicModels(apiKey);
+        case "google": return await this.getGoogleModels(apiKey);
+        case "cohere": return await this.getCohereModels(apiKey);
       }
     } catch (error) {
       console.error(`Error fetching models for ${provider}:`, error);
     }
 
     return [];
+  }
+
+  private async getOpenAIModels(apiKey: string | null): Promise<Model[]> {
+    if (!apiKey) return [
+      { id: "gpt-4o", name: "GPT-4o", value: "gpt-4o", label: "GPT-4o" },
+      { id: "gpt-4o-mini", name: "GPT-4o Mini", value: "gpt-4o-mini", label: "GPT-4o Mini" },
+    ];
+
+    const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+    const data = await openai.models.list();
+    return data.data
+      .filter((m) => m.id.startsWith("gpt-") || m.id.startsWith("o1-"))
+      .map((m) => ({
+        id: m.id,
+        name: m.id,
+        value: m.id,
+        label: m.id,
+        provider: 'cloud',
+      }));
+  }
+
+  private async getAnthropicModels(apiKey: string | null): Promise<Model[]> {
+    if (!apiKey) return [
+      { id: "claude-3-5-sonnet-latest", name: "Claude 3.5 Sonnet", value: "claude-3-5-sonnet-latest", label: "Claude 3.5 Sonnet", provider: 'cloud' },
+      { id: "claude-3-7-sonnet-latest", name: "Claude 3.7 Sonnet", value: "claude-3-7-sonnet-latest", label: "Claude 3.7 Sonnet", provider: 'cloud' },
+    ];
+
+    try {
+      const anthropic = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+      const data = await anthropic.models.list();
+      return data.data.map((m) => ({
+        id: m.id,
+        name: m.display_name || m.id,
+        value: m.id,
+        label: m.display_name || m.id,
+        provider: 'cloud',
+      }));
+    } catch (e) {
+      console.warn("Failed to fetch Anthropic models, using fallback", e);
+    }
+
+    return [
+      { id: "claude-3-7-sonnet-20250219", name: "Claude 3.7 Sonnet", value: "claude-3-7-sonnet-20250219", label: "Claude 3.7 Sonnet", provider: 'cloud' },
+      { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet", provider: 'cloud' },
+      { id: "claude-3-opus-20240229", name: "Claude 3 Opus", value: "claude-3-opus-20240229", label: "Claude 3 Opus", provider: 'cloud' },
+      { id: "claude-3-sonnet-20240229", name: "Claude 3 Sonnet", value: "claude-3-sonnet-20240229", label: "Claude 3 Sonnet", provider: 'cloud' },
+      { id: "claude-3-haiku-20240307", name: "Claude 3 Haiku", value: "claude-3-haiku-20240307", label: "Claude 3 Haiku", provider: 'cloud' },
+    ];
+  }
+
+  private async getGoogleModels(apiKey: string | null): Promise<Model[]> {
+    if (!apiKey) return [
+      { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", value: "gemini-1.5-pro", label: "Gemini 1.5 Pro", provider: 'cloud' },
+      { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash", value: "gemini-1.5-flash", label: "Gemini 1.5 Flash", provider: 'cloud' },
+    ];
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    if (!response.ok) throw new Error("Failed to fetch Google models");
+    const data = await response.json();
+    return data.models
+      .filter((m: any) => m.supportedGenerationMethods.includes("generateContent"))
+      .map((m: any) => {
+        const id = m.name.replace("models/", "");
+        return {
+          id: id,
+          name: m.displayName || id,
+          value: id,
+          label: m.displayName || id,
+          provider: 'cloud',
+        };
+      });
+  }
+
+  private async getCohereModels(apiKey: string | null): Promise<Model[]> {
+    if (!apiKey) return [
+      { id: "command-r-plus", name: "Command R+", value: "command-r-plus", label: "Command R+", provider: 'cloud' },
+      { id: "command-r", name: "Command R", value: "command-r", label: "Command R+", provider: 'cloud' },
+    ];
+
+    const cohere = new CohereClient({ token: apiKey });
+    const data = await cohere.models.list();
+    return data.models
+      ?.filter((m) => m.endpoints?.includes("chat"))
+      .map((m) => ({
+        id: m.name ?? "",
+        name: m.name ?? "",
+        value: m.name ?? "",
+        label: m.name ?? "",
+        provider: 'cloud',
+      })) || [];
   }
 
   // Get system prompt based on tool
@@ -135,6 +146,7 @@ class APIClient {
       "content-rewriter": "You are a content rewriter expert. Rewrite content to improve clarity, engagement, and readability.",
       "blog-generator": "You are a blog generator expert. Create engaging, well-structured blog posts with clear introductions, body content, and conclusions.",
       "caption-generator": "You are a caption generator expert. Create compelling social media captions that engage audiences and encourage interaction.",
+      "chat-title": "You are a helpful assistant. Generate a very short, concise title (max 4 words) for a chat based on the user message. Do not use quotes, prefixes, or punctuation. Just the title.",
     };
     return prompts[tool] || "You are a helpful AI assistant.";
   }
@@ -143,7 +155,7 @@ class APIClient {
   async generate(request: GenerateRequest): Promise<GenerateResponse> {
     if (!request.prompt || !request.tool || !request.apiKey) {
       // Allow Ollama without explicit API key if handled internally or empty string
-      if (request.provider !== 'ollama' && !request.apiKey) {
+      if (request.provider !== 'ollama' && request.provider !== 'ollama-local' && request.provider !== 'ollama-cloud' && !request.apiKey) {
         return {
           success: false,
           error: "Missing prompt, tool, or API key",
@@ -152,8 +164,17 @@ class APIClient {
     }
 
     try {
-      const provider = request.provider || "openai";
-      const modelName = request.model || this.getDefaultModel(provider);
+      const initialProvider = request.provider || "openai";
+      let modelName = request.model || this.getDefaultModel(initialProvider);
+      let provider = initialProvider;
+
+      // Auto-detect provider from model ID if it's complex (e.g. "ollama-cloud:llama3")
+      if (modelName.includes(':') && (modelName.startsWith('ollama-') || modelName.startsWith('openai:'))) {
+        const parts = modelName.split(':');
+        provider = parts[0];
+        modelName = parts.slice(1).join(':');
+      }
+
       const systemPrompt = this.getSystemPrompt(request.tool);
       const temperature = request.options?.temperature ?? 0.7;
       const maxTokens = request.options?.maxTokens; // Optional
@@ -165,7 +186,7 @@ class APIClient {
         case 'openai':
           chatModel = new ChatOpenAI({
             modelName: modelName,
-            openAIApiKey: request.apiKey,
+            apiKey: request.apiKey,
             temperature,
             maxTokens,
             configuration: {
@@ -197,22 +218,9 @@ class APIClient {
           });
           break;
         case 'ollama':
-          // For Ollama, we use ChatOpenAI with the local base URL
-          // This assumes the user has configured Ollama to allow CORS or is using a proxy,
-          // or sticking to the Tauri side for Ollama (which uses `streamApi` below maybe?)
-          // Actually, for web, direct fetch to localhost often fails mixed content (https -> http).
-          // But let's support it if the browser allows or if served from localhost.
-          const host = localStorage.getItem("ollama_host") || "http://localhost:11434";
-          chatModel = new ChatOpenAI({
-            modelName: modelName,
-            openAIApiKey: "ollama",
-            temperature,
-            configuration: {
-              baseURL: `${host}/v1`,
-              dangerouslyAllowBrowser: true,
-            },
-          });
-          break;
+        case 'ollama-local':
+        case 'ollama-cloud':
+          return await this.generateOllama(request, modelName, systemPrompt, { temperature, maxTokens, provider });
         default:
           throw new Error(`Provider ${provider} not supported`);
       }
@@ -248,29 +256,130 @@ class APIClient {
     }
   }
 
+  // Native Ollama Generation
+  private async generateOllama(
+    request: GenerateRequest,
+    modelName: string,
+    systemPrompt: string,
+    options: { temperature: number; maxTokens?: number; provider: string }
+  ): Promise<GenerateResponse> {
+    const localHost = localStorage.getItem("ollama_host") || "http://localhost:11434";
+    const ollamaApiKey = request.apiKey || localStorage.getItem("ollama_api_key");
+
+    // Determine mode
+    let ollamaMode: "local" | "cloud" = "local";
+    if (options.provider === 'ollama-cloud') ollamaMode = 'cloud';
+    else if (options.provider === 'ollama-local') ollamaMode = 'local';
+    else {
+      const stored = localStorage.getItem("selected_ollama_service") || localStorage.getItem("ollama_mode");
+      ollamaMode = stored === 'cloud' ? 'cloud' : 'local';
+    }
+
+    const host = ollamaMode === 'cloud' ? 'https://ollama.com' : localHost;
+    const apiKey = ollamaApiKey || "ollama";
+    const url = `${host}/api/chat`;
+
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (ollamaMode === 'cloud' && apiKey) {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    }
+
+    const payload = {
+      model: modelName,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: request.prompt }
+      ],
+      stream: false,
+      options: {
+        temperature: options.temperature,
+        num_predict: options.maxTokens,
+      }
+    };
+
+    let result;
+    if (isTauri()) {
+      result = await invoke<any>("call_api", {
+        method: "POST",
+        url: url,
+        headers: JSON.stringify(headers),
+        body: JSON.stringify(payload),
+      });
+    } else {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: headers as any,
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`Ollama error: ${res.status}`);
+      result = await res.json();
+    }
+
+    return {
+      success: true,
+      content: result.message?.content || result.response || "",
+      provider: options.provider,
+      model: modelName,
+      usage: {
+        promptTokens: result.prompt_eval_count || 0,
+        completionTokens: result.eval_count || 0,
+        totalTokens: (result.prompt_eval_count || 0) + (result.eval_count || 0),
+      },
+    };
+  }
+
   // Fetch Ollama models
-  async fetchModels() {
-    const host = localStorage.getItem("ollama_host") || "http://localhost:11434";
+  async fetchModels(specifiedProvider?: 'local' | 'cloud') {
+    const mode = specifiedProvider || localStorage.getItem("ollama_mode") || "local";
+    let localHost = localStorage.getItem("ollama_host") || "http://localhost:11434";
+
+    if (localHost.includes("ollama.com")) {
+      localHost = "http://localhost:11434";
+    }
+
+    const host = mode === "cloud" ? "https://ollama.com" : localHost;
+    const apiKey = localStorage.getItem("ollama_api_key");
+
+    const url = `${host}/api/tags`;
+    const headers = mode === "cloud" && apiKey ? { "Authorization": `Bearer ${apiKey}` } : undefined;
+
+    if (mode === "cloud" && !apiKey) {
+      return { error: "No API key configured for Ollama Cloud." };
+    }
 
     try {
       if (isTauri()) {
-        const res = await invoke<{ models: OllamaModel[] }>("call_api", {
+        const res = await invoke<any>("call_api", {
           method: "GET",
-          url: `${host}/api/tags`,
+          url: url,
+          headers: headers ? JSON.stringify(headers) : undefined,
         });
-        return { models: res.models };
+
+        if (res && res.raw && typeof res.raw === 'string' && res.raw.includes('<!DOCTYPE html>')) {
+          console.error("fetchModels: Received HTML response", res.raw.substring(0, 200));
+          return { error: "Cloud host returned a web page instead of API data." };
+        }
+
+        return { models: res?.models || [] };
       } else {
-        const response = await fetch(`${host}/api/tags`);
-        if (!response.ok) return { error: "Failed to fetch models" };
+        const response = await fetch(url, { headers: headers as any });
+        if (!response.ok) {
+          const text = await response.text();
+          return { error: `HTTP ${response.status}: ${text.substring(0, 100)}` };
+        }
         const data = await response.json();
-        return { models: data.models };
+        return { models: data.models || [] };
       }
-    } catch (err) {
-      return { error: err instanceof Error ? err.message : "Unknown error" };
+    } catch (err: any) {
+      if (!url.includes("localhost")) {
+        console.error(`fetchModels error for ${url}:`, err);
+      }
+      const msg = typeof err === 'string' ? err : (err?.message || "Request failed");
+      return { error: msg };
     }
   }
 
-  // Check status (simplified for static export)
+  // Check status
   async getStatus(): Promise<{
     success: boolean;
     status?: string;
@@ -279,12 +388,10 @@ class APIClient {
     aiProviders?: Provider[];
     error?: string;
   }> {
-    // Get configured providers from localStorage
     const configuredProviders = Object.keys(localStorage)
       .filter((key) => key.startsWith("api_key_"))
       .map((key) => key.replace("api_key_", ""));
 
-    // Fetch models for each configured provider (using static lists)
     const providerConfigs = [
       { label: "OpenAI", value: "openai" },
       { label: "Anthropic Claude", value: "anthropic" },
@@ -296,68 +403,59 @@ class APIClient {
       .filter((p) => configuredProviders.includes(p.value))
       .map(async (providerConfig) => {
         const models = await this.getProviderModels(providerConfig.value);
-        return {
-          ...providerConfig,
-          models,
-        };
+        return { ...providerConfig, models };
       }));
 
     const providers = aiProviders.map((p) => p.value);
     const errorMessages: string[] = [];
-    let ollamaStatus: boolean | undefined = undefined;
-    const host = localStorage.getItem("ollama_host") || "http://localhost:11434";
 
-    // Check Ollama status
-    if (isTauri()) {
-      try {
-        const res = await invoke<string>("call_api", {
-          method: "GET",
-          url: host, // Just check if reachable
-        });
-        ollamaStatus = !!res;
-      } catch (err) {
-        // errorMessages.push("Failed to fetch Ollama host via Tauri"); // Optional to log
-      }
-    } else {
-      try {
-        const resp = await fetch(host);
-        ollamaStatus = resp.ok;
-      } catch {
-        // Often fails due to CORS or mixed content if not configured
-      }
-    }
+    const fetchProviderModels = async (p: 'local' | 'cloud') => {
+      const ollamaModels = await this.fetchModels(p);
 
-    if (ollamaStatus) {
-      const ollamaModels = await this.fetchModels();
-      if ('models' in ollamaModels && ollamaModels.models) {
+      if (ollamaModels && 'models' in ollamaModels && Array.isArray(ollamaModels.models)) {
         const mappedModels: Model[] = ollamaModels.models.map((m: OllamaModel) => ({
-          id: m.name,
+          id: `ollama-${p}:${m.name}`,
           name: m.name,
-          value: m.name,
+          value: `ollama-${p}:${m.name}`,
           label: m.name,
           description: m.details?.parameter_size || "",
+          provider: p,
+          size: m.size
         }));
 
         aiProviders.push({
-          label: "Ollama (Local)",
-          value: "ollama",
+          label: p === "cloud" ? "Ollama Cloud" : "Ollama (Local)",
+          value: `ollama-${p}`,
           models: mappedModels
         });
-        providers.push("ollama");
+        providers.push(`ollama-${p}`);
+        return true;
+      } else if (ollamaModels && 'error' in ollamaModels) {
+        if (!(p === 'cloud' && ollamaModels.error?.includes("No API key"))) {
+          errorMessages.push(`${p}: ${ollamaModels.error}`);
+        }
+        return false;
       }
-    }
+      return false;
+    };
+
+    const selectedService = localStorage.getItem("selected_ollama_service") || localStorage.getItem("ollama_mode") || "local";
+    const [localAvailable, cloudAvailable] = await Promise.all([
+      fetchProviderModels('local'),
+      fetchProviderModels('cloud')
+    ]);
 
     return {
-      success: true, // Always true for client-side as we don't depend on backend status
+      success: true,
       status: "online",
-      ollamaStatus,
+      ollamaStatus: selectedService === 'cloud' ? cloudAvailable : localAvailable,
       providers,
       aiProviders,
       error: errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
     };
   }
 
-  // Stream API for real-time responses (Tauri only - kept for compatibility)
+  // Stream API (Tauri only)
   streamApi(
     method: string,
     url: string,
@@ -370,49 +468,33 @@ class APIClient {
       async start(controller) {
         const { listen } = await import("@tauri-apps/api/event");
 
-        const unlistenChunk = await listen<{ chunk: string }>(
-          `stream-chunk-${streamId}`,
-          (event) => {
-            const chunk = event.payload.chunk;
-            controller.enqueue(new TextEncoder().encode(chunk));
-          }
-        );
+        const unlistenChunk = await listen<{ chunk: string }>(`stream-chunk-${streamId}`, (event) => {
+          controller.enqueue(new TextEncoder().encode(event.payload.chunk));
+        });
 
-        const unlistenError = await listen<{ error: string }>(
-          `stream-error-${streamId}`,
-          (event) => {
-            console.error("Stream error:", event.payload.error);
-            controller.error(new Error(event.payload.error));
-            unlistenChunk();
-            unlistenError();
-            unlistenComplete();
-          }
-        );
+        const unlistenError = await listen<{ error: string }>(`stream-error-${streamId}`, (event) => {
+          console.error("Stream error:", event.payload.error);
+          controller.error(new Error(event.payload.error));
+          cleanup();
+        });
 
-        const unlistenComplete = await listen<{ done: boolean }>(
-          `stream-complete-${streamId}`,
-          () => {
-            controller.close();
-            unlistenChunk();
-            unlistenError();
-            unlistenComplete();
-          }
-        );
+        const unlistenComplete = await listen<{ done: boolean }>(`stream-complete-${streamId}`, () => {
+          controller.close();
+          cleanup();
+        });
 
-        try {
-          await invoke("stream_api", {
-            streamId,
-            method,
-            url,
-            headers: headers ? JSON.stringify(headers) : undefined,
-            body,
-          });
-        } catch (error) {
-          console.error("Failed to start stream:", error);
-          controller.error(error);
+        const cleanup = () => {
           unlistenChunk();
           unlistenError();
           unlistenComplete();
+        };
+
+        try {
+          await invoke("stream_api", { streamId, method, url, headers: headers ? JSON.stringify(headers) : undefined, body });
+        } catch (error) {
+          console.error("Failed to start stream:", error);
+          controller.error(error);
+          cleanup();
         }
       },
     });

@@ -101,7 +101,9 @@ export default function ToolPage() {
   }, []);
 
   useEffect(() => {
-    const key = localStorage.getItem(`api_key_${selectedProvider}`);
+    const key = selectedProvider === 'ollama-cloud'
+      ? localStorage.getItem('ollama_api_key')
+      : localStorage.getItem(`api_key_${selectedProvider}`);
     setApiKey(key as string);
     const provider = availableProviders.find(
       (p) => p.value === selectedProvider
@@ -257,7 +259,11 @@ export default function ToolPage() {
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1 h-8 rounded-full border-primary/10 bg-primary/5 text-primary"
               >
                 <Zap className="w-3.5 h-3.5 fill-current" />
-                <span className="font-medium">{selectedProvider}</span>
+                <span className="font-medium">
+                  {selectedProvider === 'ollama-local' ? 'Ollama (Local)' :
+                    selectedProvider === 'ollama-cloud' ? 'Ollama Cloud' :
+                      selectedProvider.charAt(0).toUpperCase() + selectedProvider.slice(1)}
+                </span>
               </Badge>
             )}
             {apiStatus === "offline" && (

@@ -1,6 +1,6 @@
 [package]
 name = "ai-hub"
-version = "0.5.2"
+version = "0.5.3"
 description = "AI Hub lets you chat with powerful AI models like Ollama for real-time assistance, content generation, and productivity tools—all in one place"
 authors = ["aj-seven"]
 edition = "2021"
@@ -26,6 +26,7 @@ reqwest = { version = "0.12", features = ["json", "stream"] }
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 json = "0.12.4"
+openssl-sys = { version = "0.9", features = ["vendored"] }
 
 [features]
 # by default Tauri runs in production mode

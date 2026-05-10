@@ -10,7 +10,10 @@ async fn call_api(
     headers: Option<String>,
     body: Option<String>,
 ) -> Result<Value, String> {
-    let client = Client::new();
+    let client = Client::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .build()
+        .unwrap_or(Client::new());
 
     let method = method
         .parse::<reqwest::Method>()
@@ -61,7 +64,10 @@ async fn stream_api(
     headers: Option<String>,
     body: Option<String>,
 ) -> Result<(), String> {
-    let client = Client::new();
+    let client = Client::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .build()
+        .unwrap_or(Client::new());
 
     let method = method
         .parse::<reqwest::Method>()
@@ -133,7 +139,10 @@ async fn stream_api(
 
 #[command]
 async fn chat_api(url: String, body: String) -> Result<String, String> {
-    let client = Client::new();
+    let client = Client::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .build()
+        .unwrap_or(Client::new());
 
     let req = client
         .post(&url)

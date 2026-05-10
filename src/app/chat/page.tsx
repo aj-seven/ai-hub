@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 
+import { ChatSidebar } from "./_components/ChatSidebar";
 import { ChatMessages } from "./_components/ChatMessages";
 import { ChatInput } from "./_components/ChatInput";
-import { ChatSidebar } from "./_components/ChatSidebar";
 import { ProjectView } from "./_components/ProjectView";
 import { Project, Chat, Message } from "@/types/chat";
 import { apiClient } from "@/lib/api-client";
+import { Model } from "@/types/api-client";
 import { isTauri, invoke } from "@tauri-apps/api/core";
 
 export default function ChatPage() {
@@ -24,6 +25,7 @@ export default function ChatPage() {
   const [generatingTitle, setGeneratingTitle] = useState(false);
   const [abortCtrl, setAbortCtrl] = useState<AbortController | null>(null);
   const [model, setModel] = useState<string>("");
+  const [modelList, setModelList] = useState<Model[]>([]);
 
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
   const [editingTitleVal, setEditingTitleVal] = useState("");
@@ -32,6 +34,7 @@ export default function ChatPage() {
     "You are a helpful assistant."
   );
   const [apiStatus, setApiStatus] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string>("");
 
   useEffect(() => {
     const loadFromLocalStorage = async () => {
@@ -61,12 +64,32 @@ export default function ChatPage() {
       try {
         const response = await apiClient.getStatus();
         setApiStatus(response.ollamaStatus ? "online" : "offline");
-      } catch {
+        setApiError(response.error || "");
+      } catch (err: any) {
         setApiStatus("offline");
+        setApiError(typeof err === 'string' ? err : err?.message || "Unknown error");
       }
     };
 
     checkApiStatus();
+
+    // Listen for storage changes to refresh status
+    const handleStorageChange = (e: Event | StorageEvent) => {
+      if (e instanceof StorageEvent) {
+        if (["ollama_mode", "ollama_host", "ollama_api_key", "selected_ollama_service"].includes(e.key || "")) {
+          checkApiStatus();
+        }
+      } else {
+        checkApiStatus();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange as any);
+    window.addEventListener("storage_sync", handleStorageChange as any);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange as any);
+      window.removeEventListener("storage_sync", handleStorageChange as any);
+    };
   }, []);
 
   // Helpers
@@ -175,59 +198,41 @@ export default function ChatPage() {
   const generateTitle = async (chatId: string, firstMessage: string) => {
     setGeneratingTitle(true);
     try {
-      const host = localStorage.getItem("ollama_host");
-      if (!host) return;
+      const selectedModelData = modelList.find(m => m.id === model);
+      let providerBase = selectedModelData?.provider || 'openai';
 
-      const prompt = `Generate a very short, concise title (max 4 words) for a chat that starts with this message: "${firstMessage}". Do not use quotes or prefixes. Just the title.`;
+      // Map provider base for apiClient.generate
+      let finalProvider = providerBase;
+      if (model.startsWith('ollama-local')) finalProvider = 'ollama-local';
+      else if (model.startsWith('ollama-cloud')) finalProvider = 'ollama-cloud';
+      else if (model.startsWith('gpt-') || model.includes('openai')) finalProvider = 'openai';
+      else if (model.startsWith('claude-') || model.includes('anthropic')) finalProvider = 'anthropic';
+      else if (model.startsWith('gemini') || model.includes('google')) finalProvider = 'google';
+      else if (model.includes('cohere')) finalProvider = 'cohere';
 
-      let title = "New Chat";
+      const apiKey = finalProvider.startsWith('ollama')
+        ? (localStorage.getItem("ollama_api_key") || "")
+        : (localStorage.getItem(`api_key_${finalProvider}`) || "");
 
-      if (isTauri()) {
-        const res = await apiClient.generate({
-          model: model, // Use current model
-          prompt: prompt,
-          tool: "text-summarizer", // Fallback, not strictly used for direct Ollama
-          apiKey: "ollama",
-          provider: "ollama",
-        });
-        // Note: The generate method in apiClient is for the abstract /api/generate.
-        // We should just call Ollama direct for consistency with chat or use a simple fetch.
-        // Let's use a direct fetch/invoke to Ollama /api/generate for simplicity and speed.
+      const res = await apiClient.generate({
+        prompt: firstMessage,
+        tool: 'chat-title',
+        provider: finalProvider,
+        model: model,
+        apiKey: apiKey,
+      });
 
-        const response = await invoke<{ response: string }>("call_api", {
-          method: "POST",
-          url: `${host}/api/generate`,
-          body: JSON.stringify({
-            model: model,
-            prompt: prompt,
-            stream: false,
-          }),
-        });
-        title = response.response.trim();
-      } else {
-        const res = await fetch(`${host}/api/generate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: model,
-            prompt: prompt,
-            stream: false,
-          }),
-        });
-        const data = await res.json();
-        title = data.response.trim();
-      }
-
-      // Update title
-      if (title) {
-        // Create a function reference to update without stale state issues
-        setChats((prevChats) => {
-          const updated = prevChats.map((c) =>
-            c.id === chatId ? { ...c, title: title.replace(/^"|"$/g, "") } : c
-          );
-          localStorage.setItem("savedChats", JSON.stringify(updated));
-          return updated;
-        });
+      if (res.success && res.content) {
+        const title = res.content.trim().replace(/^["']|["']$/g, "");
+        if (title) {
+          setChats((prevChats) => {
+            const updated = prevChats.map((c) =>
+              c.id === chatId ? { ...c, title } : c
+            );
+            localStorage.setItem("savedChats", JSON.stringify(updated));
+            return updated;
+          });
+        }
       }
     } catch (error) {
       console.error("Failed to generate title:", error);
@@ -293,10 +298,22 @@ export default function ChatPage() {
     setInput("");
     setLoading(true);
 
-    const host = localStorage.getItem("ollama_host");
-    if (!host) throw new Error("Ollama host not set");
+    const selectedModelData = modelList.find(m => m.id === model);
+    const provider = selectedModelData?.provider || 'local';
+    const modelName = selectedModelData?.name || model;
 
+    const localHost = localStorage.getItem("ollama_host") || "http://localhost:11434";
+    const apiKey = localStorage.getItem("ollama_api_key");
+
+    const host = provider === 'cloud' ? 'https://ollama.com' : localHost;
     const url = `${host}/api/chat`;
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (provider === 'cloud' && apiKey) {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    }
 
     try {
       let reader: ReadableStreamDefaultReader<Uint8Array>;
@@ -304,7 +321,7 @@ export default function ChatPage() {
       // TAURI VERSION
       if (isTauri()) {
         const payload = {
-          model,
+          model: modelName,
           messages: finalMessages,
           stream: true,
           host,
@@ -313,7 +330,7 @@ export default function ChatPage() {
         const stream = apiClient.streamApi(
           "POST",
           url,
-          { "Content-Type": "application/json" },
+          headers,
           JSON.stringify(payload)
         );
 
@@ -322,12 +339,11 @@ export default function ChatPage() {
         // WEB VERSION
         const res = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: headers,
           body: JSON.stringify({
-            model,
+            model: modelName,
             messages: finalMessages,
             stream: true,
-            host: localStorage.getItem("ollama_host"),
           }),
           signal: ctrl.signal,
         });
@@ -367,7 +383,7 @@ export default function ChatPage() {
               currentAssistantMessage += json.message.content;
               contentUpdated = true;
             }
-          } catch {}
+          } catch { }
         }
 
         const now = Date.now();
@@ -390,7 +406,7 @@ export default function ChatPage() {
           if (json.message?.content) {
             currentAssistantMessage += json.message.content;
           }
-        } catch {}
+        } catch { }
       }
 
       const finalMsgs = [
@@ -443,7 +459,7 @@ export default function ChatPage() {
           projects={projects}
           currentChatId={currentChatId}
           selectedProjectId={selectedProjectId}
-          selectChat={(id) => {
+          selectChat={(id: string) => {
             selectChat(id);
           }}
           selectProject={selectProject}
@@ -473,6 +489,7 @@ export default function ChatPage() {
             <ChatMessages
               messages={messages}
               apiStatus={apiStatus}
+              apiError={apiError}
               loading={loading}
             />
 
@@ -486,6 +503,7 @@ export default function ChatPage() {
               systemMessage={systemPrompt}
               setSystemMessage={setSystemPrompt}
               apiStatus={apiStatus}
+              onModelDataUpdate={setModelList}
               sidebarProps={{
                 chats,
                 projects,

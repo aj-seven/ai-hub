@@ -40,6 +40,8 @@ export type Model = {
   description?: string;
   value?: string;
   label?: string;
+  provider?: 'local' | 'cloud';
+  size?: number;
 };
 
 export interface OllamaModel {
