@@ -1,7 +1,7 @@
 {
   "name": "ai-hub",
   "private": true,
-  "version": "0.5.2",
+  "version": "0.5.3",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
